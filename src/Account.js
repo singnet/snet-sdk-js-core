@@ -133,11 +133,15 @@ class Account {
      * @see {@link https://web3js.readthedocs.io/en/1.0/web3-utils.html#soliditysha3|data}
      */
     async signData(...data) {
-        const sha3Message = this._web3.utils.soliditySha3(...data);
-        const signature = await this._identity.signData(sha3Message);
-        const stripped = signature.substring(2, signature.length);
-        const byteSig = Buffer.from(stripped, 'hex');
-        return Buffer.from(byteSig);
+        try {
+            const sha3Message = this._web3.utils.soliditySha3(...data);
+            const signature = await this._identity.signData(sha3Message);
+            const stripped = signature.substring(2, signature.length);
+            const byteSig = Buffer.from(stripped, 'hex');
+            return Buffer.from(byteSig);
+        } catch (error) {
+            throw new Error('sign data error: ', error);
+        }
     }
 
     /**
@@ -148,9 +152,13 @@ class Account {
      * @returns {Promise<TransactionReceipt>}
      */
     async sendTransaction(to, contractFn, ...contractFnArgs) {
-        const operation = contractFn(...contractFnArgs);
-        const txObject = await this._baseTransactionObject(operation, to);
-        return this._identity.sendTransaction(txObject);
+        try {
+            const operation = contractFn(...contractFnArgs);
+            const txObject = await this._baseTransactionObject(operation, to);
+            return this._identity.sendTransaction(txObject);
+        } catch (error) {
+            throw new Error('send transaction error: ', error);
+        }
     }
 
     get tokenContract() {
@@ -169,33 +177,49 @@ class Account {
     }
 
     async _baseTransactionObject(operation, to) {
-        const { gasLimit, gasPrice } = await this._getGas(operation);
-        const nonce = await this._transactionCount();
-        const chainId = await this._getChainId();
-        return {
-            nonce: this._web3.utils.toHex(nonce),
-            gas: this._web3.utils.toHex(gasLimit),
-            gasPrice: this._web3.utils.toHex(gasPrice),
-            to,
-            data: operation.encodeABI(),
-            chainId,
-        };
+        try {
+            const { gasLimit, gasPrice } = await this._getGas(operation);
+            const nonce = await this._transactionCount();
+            const chainId = await this._getChainId();
+            return {
+                nonce: this._web3.utils.toHex(nonce),
+                gas: this._web3.utils.toHex(gasLimit),
+                gasPrice: this._web3.utils.toHex(gasPrice),
+                to,
+                data: operation.encodeABI(),
+                chainId,
+            };
+        } catch (error) {
+            throw new Error('generate base transaction object error: ', error);
+        }
     }
 
     async _getGas(operation) {
-        const gasPrice = await this._web3.eth.getGasPrice();
-        const address = await this.getAddress();
-        const estimatedGas = await operation.estimateGas({ from: address });
-        return { gasLimit: estimatedGas, gasPrice };
+        try {
+            const gasPrice = await this._web3.eth.getGasPrice();
+            const address = await this.getAddress();
+            const estimatedGas = await operation.estimateGas({ from: address });
+            return { gasLimit: estimatedGas, gasPrice };
+        } catch (error) {
+            throw new Error('get gas error: ', error);
+        }
     }
 
     async _transactionCount() {
-        const address = await this.getAddress();
-        return this._web3.eth.getTransactionCount(address);
+        try {
+            const address = await this.getAddress();
+            return this._web3.eth.getTransactionCount(address);
+        } catch (error) {
+            throw new Error('counting transaction error: ', error);
+        }
     }
 
     async _getChainId() {
-        return this._web3.eth.net.getId();
+        try {
+            return await this._web3.eth.net.getId();
+        } catch (error) {
+            throw new Error('get chain id error: ', error);
+        }
     }
 }
 

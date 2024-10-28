@@ -3,19 +3,6 @@ import { BigNumber } from 'bignumber.js';
 import { toBNString } from '../src/utils/bignumber_helper';
 import logger from '../src/utils/bignumber_helper';
 
-import createLogger from 'winston/dist/winston/create-logger';
-import { format } from 'logform';
-import winston from 'winston';
-
-const testLogger = createLogger({
-    format: format.simple(),
-    level: process.env.DEBUG ? 'silly' : 'info',
-    transports: [
-        new winston.transports.Console(),
-        new winston.transports.File({ filename: 'testLogfile.log' }),
-    ],
-});
-
 jest.mock('../src/utils/bignumber_helper');
 jest.mock(logger);
 
