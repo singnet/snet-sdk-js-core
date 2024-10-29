@@ -7,8 +7,8 @@ const logger = createLogger({
   level: process.env.DEBUG ? 'silly' : 'info',
   transports: [
     new winston.transports.Console(),
-    new winston.transports.File({ filename: 'logfile.log' })
-  ]
+    new winston.transports.File({ filename: 'logfile.log' }),
+  ],
 });
 
 export default logger;

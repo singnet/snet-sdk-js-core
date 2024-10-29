@@ -1,11 +1,11 @@
-import DefaultPaymentChannelManagementStrategy from "./DefaultPaymentChannelManagementStrategy";
+import DefaultPaymentChannelManagementStrategy from './DefaultPaymentChannelManagementStrategy';
 
 class PrepaidPaymentChannelManagementStrategy extends DefaultPaymentChannelManagementStrategy {
   constructor(
     sdkContext,
+    concurrencyManager,
     blockOffset = 240,
     callAllowance = 1,
-    concurrencyManager,
   ) {
     super(sdkContext, blockOffset, callAllowance);
     this._sdkContext = sdkContext;
@@ -16,8 +16,8 @@ class PrepaidPaymentChannelManagementStrategy extends DefaultPaymentChannelManag
 
   _priceForConcurrentCalls(serviceClient) {
     return (
-      this._pricePerServiceCall(serviceClient) *
-      this._concurrencyManager.concurrentCalls
+      this._pricePerServiceCall(serviceClient)
+            * this._concurrencyManager.concurrentCalls
     );
   }
 
@@ -32,8 +32,8 @@ class PrepaidPaymentChannelManagementStrategy extends DefaultPaymentChannelManag
     const defaultExpiry = await this._defaultChannelExpiry(serviceClient);
     const offsetExpiry = defaultExpiry + this.blockOffset;
     let paymentChannel;
-    if (paymentChannels.length < 1) {
-      if (concurrentCallsPrice > mpeBalance) {
+    if(paymentChannels.length < 1) {
+      if(concurrentCallsPrice > mpeBalance) {
         paymentChannel = serviceClient.depositAndOpenChannel(
           concurrentCallsPrice,
           offsetExpiry,
@@ -54,13 +54,18 @@ class PrepaidPaymentChannelManagementStrategy extends DefaultPaymentChannelManag
     );
     const isValid = this._isValid(paymentChannel, defaultExpiry);
 
-    if (hasSufficientFunds && !isValid) {
+    if(hasSufficientFunds && !isValid) {
       await paymentChannel.extendExpiry(offsetExpiry);
-    } else if (!hasSufficientFunds && isValid) {
+    } else if(!hasSufficientFunds && isValid) {
       await paymentChannel.addFunds(extendChannelFund);
-    } else if (!hasSufficientFunds && !isValid) {
-      await paymentChannel.extendAndAddFunds(offsetExpiry, extendChannelFund);
+    } else if(!hasSufficientFunds && !isValid) {
+      await paymentChannel.extendAndAddFunds(
+        offsetExpiry,
+        extendChannelFund,
+      );
     }
     return paymentChannel;
   }
 }
+
+export default PrepaidPaymentChannelManagementStrategy;

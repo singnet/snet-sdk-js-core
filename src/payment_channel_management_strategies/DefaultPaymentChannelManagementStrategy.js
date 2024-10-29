@@ -18,18 +18,18 @@ class DefaultPaymentChannelManagementStrategy {
 
     async selectChannel(serviceClient) {
         try {
-            const account = this._sdkContext.account;
+            const { account } = this._sdkContext;
             await serviceClient.loadOpenChannels();
             await serviceClient.updateChannelStates();
-            const paymentChannels = serviceClient.paymentChannels;
+            const { paymentChannels } = serviceClient;
             const serviceCallPrice =
                 this._pricePerServiceCall(serviceClient) * this._callAllowance;
             const mpeBalance = await account.escrowBalance();
             const defaultExpiry =
                 await this._defaultChannelExpiry(serviceClient);
 
-            if (paymentChannels.length === 0) {
-                if (mpeBalance >= serviceCallPrice) {
+            if(paymentChannels.length === 0) {
+                if(mpeBalance >= serviceCallPrice) {
                     return serviceClient.openChannel(
                         serviceCallPrice,
                         defaultExpiry
@@ -48,14 +48,14 @@ class DefaultPaymentChannelManagementStrategy {
                     this._hasSufficientFunds(paymentChanel, serviceCallPrice) &&
                     this._isValid(paymentChanel, defaultExpiry)
             );
-            if (firstFundedValidChannel) {
+            if(firstFundedValidChannel) {
                 return firstFundedValidChannel;
             }
 
             const firstFundedChannel = find(paymentChannels, (paymentChanel) =>
                 this._hasSufficientFunds(paymentChanel, serviceCallPrice)
             );
-            if (firstFundedChannel) {
+            if(firstFundedChannel) {
                 await firstFundedChannel.extendExpiry(defaultExpiry);
                 return firstFundedChannel;
             }
@@ -63,7 +63,7 @@ class DefaultPaymentChannelManagementStrategy {
             const firstValidChannel = find(paymentChannels, (paymentChanel) =>
                 this._isValid(paymentChanel, defaultExpiry)
             );
-            if (firstValidChannel) {
+            if(firstValidChannel) {
                 await firstValidChannel.addFunds(serviceCallPrice);
                 return firstValidChannel;
             }
@@ -83,7 +83,8 @@ class DefaultPaymentChannelManagementStrategy {
         const { pricing } = serviceClient.group;
         const fixedPricing = find(
             pricing,
-            ({ price_model }) => 'fixed_price' === price_model
+            /* eslint-disable camelcase */
+            ({ price_model }) => price_model === 'fixed_price'
         );
 
         return new BigNumber(fixedPricing.price_in_cogs);

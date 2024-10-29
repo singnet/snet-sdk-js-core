@@ -1,0 +1,47 @@
+{
+  "env": {
+    "browser": true,
+    "es6": true,
+    "jest": true,
+    "node": true
+  },
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly"
+  },
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "rules": {
+    "max-len": [
+      "warn",
+      120,
+      {
+        "ignoreComments": true 
+      }
+    ],
+    "prefer-destructuring": "off",
+    "class-methods-use-this": "off",
+    "import/prefer-default-export": "off",
+    "no-underscore-dangle": [
+      "off",
+      {
+        "allowAfterThis": true
+      }
+    ],
+    "keyword-spacing": [
+      "error",
+      {
+        "overrides": {
+          "if": {
+            "after": false
+          },
+          "while": {
+            "after": false
+          }
+        }
+      }
+    ]
+  }
+}

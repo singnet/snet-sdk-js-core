@@ -1,1 +1,1 @@
-export { default as DefaultPaymentChannelManagementStrategy } from "./DefaultPaymentChannelManagementStrategy";
+export { default as DefaultPaymentChannelManagementStrategy } from './DefaultPaymentChannelManagementStrategy';
