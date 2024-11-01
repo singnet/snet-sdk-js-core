@@ -13,7 +13,7 @@
     "url": "git+https://github.com/singnet/snet-sdk-core.git"
   },
   "scripts": {
-    "build": "babel src --out-dir dist",
+    "build": "rollup -c --bundleConfigAsCjs",
     "docGen": "jsdoc2md  src/*.js > ./docs/docs.md",
     "lint": "eslint src",
     "lint:fix": "eslint . --fix",
@@ -22,27 +22,26 @@
   "author": "SingularityNET Foundation",
   "license": "MIT",
   "dependencies": {
-    "axios": "^1.7.7",
     "bignumber.js": "^9.1.2",
-    "lodash": "latest",
-    "logform": "^2.6.1",
+    "loglevel": "^1.9.2",
     "singularitynet-platform-contracts": "^1.0.4",
-    "singularitynet-token-contracts": "^3.0.3",
-    "web3": "^4.14.0",
-    "winston": "^3.15.0"
+    "singularitynet-token-contracts": "^3.0.3"
+  },
+  "peerDependencies": {
+    "lodash": "latest",
+    "web3": "^4.4.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.25.9",
     "@babel/core": "^7.25.9",
-    "@babel/eslint-parser": "^7.25.9",
     "@babel/preset-env": "^7.25.9",
+    "@rollup/plugin-commonjs": "^28.0.1",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.3.0",
+    "@rollup/plugin-terser": "^0.4.4",
     "eslint": "^8.57.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-jsx-a11y": "^6.9.0",
-    "eslint-plugin-prettier": "^5.2.1",
     "jest": "^29.7.0",
     "jsdoc-to-markdown": "^9.0.4",
-    "prettier": "^3.3.3"
+    "rollup": "^4.24.3",
+    "rollup-plugin-peer-deps-external": "^2.2.4"
   }
 }
