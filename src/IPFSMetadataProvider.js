@@ -1,7 +1,6 @@
 // import url from 'url';
 import RegistryNetworks from 'singularitynet-platform-contracts/networks/Registry.json';
 import RegistryAbi from 'singularitynet-platform-contracts/abi/Registry.json';
-import { get } from 'axios';
 
 import logger from './utils/logger';
 
@@ -78,8 +77,11 @@ export default class IPFSMetadataProvider {
         logger.debug(`Fetching metadata from IPFS[CID: ${ipfsCID}]`);
         try {
             const fetchUrl = `${this._ipfsEndpoint}/api/v0/cat?arg=${ipfsCID}`;
-            const response = await get(fetchUrl);
-            return response.data;
+            const response = await fetch(fetchUrl);
+            if (!response.ok) {
+                throw response.error;
+            }
+            return response.json();
         } catch (error) {
             logger.debug(`Error fetching metadata from IPFS[CID: ${ipfsCID}]`);
             throw error;
