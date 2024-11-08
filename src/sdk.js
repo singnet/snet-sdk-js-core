@@ -2,10 +2,10 @@ import Web3 from 'web3';
 import { isEmpty } from 'lodash';
 
 import Account from './Account';
-import MPEContract from './MPEContract';
-import logger from './utils/logger';
+import MPEContract from './mpe/MPEContract';
 import IPFSMetadataProvider from './IPFSMetadataProvider';
 import { DefaultPaymentStrategy } from './payment_strategies';
+import { debug, error } from 'loglevel';
 
 const DEFAULT_CONFIG = {
     defaultGasLimit: 210000,

@@ -2,8 +2,9 @@ import MPEAbi from 'singularitynet-platform-contracts/abi/MultiPartyEscrow';
 import MPENetworks from 'singularitynet-platform-contracts/networks/MultiPartyEscrow';
 import Web3 from 'web3';
 import PaymentChannel from './PaymentChannel';
-import logger from './utils/logger';
-import { toBNString } from './utils/bignumber_helper';
+// // import logger from './utils/logger';
+// import { log as logger } from 'loglevel';
+import { toBNString } from '../utils/bignumber_helper';
 
 class MPEContract {
     /**
@@ -43,7 +44,7 @@ class MPEContract {
      * @returns {Promise<BigNumber>}
      */
     async balance(address) {
-        logger.debug('Fetching MPE account balance', { tags: ['MPE'] });
+        // logger.debug('Fetching MPE account balance', { tags: ['MPE'] });
         return this.contract.methods.balances(address).call();
     }
 
@@ -55,9 +56,9 @@ class MPEContract {
      */
     async deposit(account, amountInCogs) {
         const amount = toBNString(amountInCogs);
-        logger.info(`Depositing ${amount}cogs to MPE account`, {
-            tags: ['MPE'],
-        });
+        // logger.info(`Depositing ${amount}cogs to MPE account`, {
+        //     tags: ['MPE'],
+        // });
         const depositOperation = this.contract.methods.deposit;
         return account.sendTransaction(this.address, depositOperation, amount);
     }
@@ -70,9 +71,9 @@ class MPEContract {
      */
     async withdraw(account, amountInCogs) {
         const amount = toBNString(amountInCogs);
-        logger.info(`Withdrawing ${amount}cogs from MPE account`, {
-            tags: ['MPE'],
-        });
+        // logger.info(`Withdrawing ${amount}cogs from MPE account`, {
+        //     tags: ['MPE'],
+        // });
         const withdrawOperation = this.contract.methods.withdraw;
         return account.sendTransaction(this.address, withdrawOperation, amount);
     }
@@ -93,10 +94,10 @@ class MPEContract {
             group_id_in_bytes: groupId,
         } = service.group;
 
-        logger.info(
-            `Opening new payment channel [amount: ${amount}, expiry: ${expiryStr}]`,
-            { tags: ['MPE'] }
-        );
+        // logger.info(
+        //     `Opening new payment channel [amount: ${amount}, expiry: ${expiryStr}]`,
+        //     { tags: ['MPE'] }
+        // );
         const openChannelOperation = this.contract.methods.openChannel;
         try {
             const signerAddress = await account.getSignerAddress();
@@ -149,10 +150,10 @@ class MPEContract {
                 amount,
                 expiryStr,
             ];
-            logger.info(
-                `Depositing ${amount}cogs to MPE address and Opening new payment channel [expiry: ${expiryStr}]`,
-                { tags: ['MPE'] }
-            );
+            // logger.info(
+            //     `Depositing ${amount}cogs to MPE address and Opening new payment channel [expiry: ${expiryStr}]`,
+            //     { tags: ['MPE'] }
+            // );
             return account.sendTransaction(
                 this.address,
                 depositAndOpenChannelOperation,
@@ -179,10 +180,10 @@ class MPEContract {
         try {
             await this._fundEscrowAccount(account, amountInCogs);
 
-            logger.info(
-                `Funding PaymentChannel[id: ${channelIdStr}] with ${amount}cogs`,
-                { tags: ['MPE'] }
-            );
+            // logger.info(
+            //     `Funding PaymentChannel[id: ${channelIdStr}] with ${amount}cogs`,
+            //     { tags: ['MPE'] }
+            // );
             const channelAddFundsOperation =
                 this.contract.methods.channelAddFunds;
             return account.sendTransaction(
@@ -206,10 +207,10 @@ class MPEContract {
     async channelExtend(account, channelId, expiry) {
         const channelIdStr = toBNString(channelId);
         const expiryStr = toBNString(expiry);
-        logger.info(
-            `Extending PaymentChannel[id: ${channelIdStr}]. New expiry is block# ${expiryStr}`,
-            { tags: ['MPE'] }
-        );
+        // logger.info(
+        //     `Extending PaymentChannel[id: ${channelIdStr}]. New expiry is block# ${expiryStr}`,
+        //     { tags: ['MPE'] }
+        // );
         const channelExtendOperation = this.contract.methods.channelExtend;
         return account.sendTransaction(
             this.address,
@@ -234,10 +235,10 @@ class MPEContract {
         try {
             await this._fundEscrowAccount(account, amountInCogs);
 
-            logger.info(
-                `Extending and Funding PaymentChannel[id: ${channelIdStr}] with amount: ${amount} and expiry: ${expiryStr}`,
-                { tags: ['MPE'] }
-            );
+            // logger.info(
+            //     `Extending and Funding PaymentChannel[id: ${channelIdStr}] with amount: ${amount} and expiry: ${expiryStr}`,
+            //     { tags: ['MPE'] }
+            // );
             const channelExtendAndAddFundsOperation =
                 this.contract.methods.channelExtendAndAddFunds;
             return account.sendTransaction(
@@ -263,10 +264,10 @@ class MPEContract {
      */
     async channelClaimTimeout(account, channelId) {
         const channelIdStr = toBNString(channelId);
-        logger.info(
-            `Claiming unused funds from expired channel PaymentChannel[id: ${channelIdStr}]`,
-            { tags: ['MPE'] }
-        );
+        // logger.info(
+        //     `Claiming unused funds from expired channel PaymentChannel[id: ${channelIdStr}]`,
+        //     { tags: ['MPE'] }
+        // );
         const channelClaimTimeoutOperation =
             this.contract.methods.channelClaimTimeout;
         return account.sendTransaction(
@@ -283,9 +284,9 @@ class MPEContract {
      */
     async channels(channelId) {
         const channelIdStr = toBNString(channelId);
-        logger.debug(`Fetch latest PaymentChannel[id: ${channelIdStr}] state`, {
-            tags: ['MPE'],
-        });
+        // logger.debug(`Fetch latest PaymentChannel[id: ${channelIdStr}] state`, {
+        //     tags: ['MPE'],
+        // });
         return this.contract.methods.channels(channelIdStr).call();
     }
 
@@ -309,10 +310,10 @@ class MPEContract {
                     MPENetworks[this._networkId].address
                 );
             }
-            logger.debug(
-                `Fetching all payment channel open events starting at block: ${fromBlock}`,
-                { tags: ['MPE'] }
-            );
+            // logger.debug(
+            //     `Fetching all payment channel open events starting at block: ${fromBlock}`,
+            //     { tags: ['MPE'] }
+            // );
 
             const address = await account.getAddress();
             const decodedData = Buffer.from(
@@ -370,8 +371,9 @@ class MPEContract {
     async _deploymentBlockNumber() {
         try {
             const { transactionHash } = MPENetworks[this._networkId];
-            const { blockNumber } =
-                await this._web3.eth.getTransactionReceipt(transactionHash);
+            const { blockNumber } = await this._web3.eth.getTransactionReceipt(
+                transactionHash
+            );
             return blockNumber;
         } catch (error) {
             throw new Error('deployment block number error: ', error);
