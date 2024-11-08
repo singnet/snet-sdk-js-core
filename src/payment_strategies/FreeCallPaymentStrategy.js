@@ -37,24 +37,28 @@ class FreeCallPaymentStrategy {
      * generate free call payment metadata
      * @returns {Promise<({'snet-free-call-auth-token-bin': FreeCallConfig.tokenToMakeFreeCall}|{'snet-free-call-token-expiry-block': *}|{'snet-payment-type': string}|{'snet-free-call-user-id': *}|{'snet-current-block-number': *})[]>}
      */
-  async getPaymentMetadata() {
-    const { email, tokenToMakeFreeCall, tokenExpiryDateBlock } = this._serviceClient.getFreeCallConfig();
-    const currentBlockNumber = await this._serviceClient.getCurrentBlockNumber();
-    const signature = await this._generateSignature(currentBlockNumber);
-    const tokenBytes = this._encodingUtils.hexStringToBytes(tokenToMakeFreeCall);
-    const metadata = [
-      { 'snet-free-call-auth-token-bin': tokenBytes },
-      { 'snet-free-call-token-expiry-block': `${tokenExpiryDateBlock}` },
-      { 'snet-payment-type': 'free-call' },
-      { 'snet-free-call-user-id': email },
-      { 'snet-current-block-number': `${currentBlockNumber}` },
-      { 'snet-payment-channel-signature-bin': signature },
-    ];
+    async getPaymentMetadata() {
+        const { email, tokenToMakeFreeCall, tokenExpiryDateBlock } =
+            this._serviceClient.getFreeCallConfig();
+        const currentBlockNumber =
+            await this._serviceClient.getCurrentBlockNumber();
+        const signature = await this._generateSignature(currentBlockNumber);
+        const tokenBytes =
+            this._encodingUtils.hexStringToBytes(tokenToMakeFreeCall);
+        const metadataFields = {
+            type: 'free-call',
+            userId: email,
+            currentBlockNumber,
+            freecallAuthToken: tokenBytes,
+            freecallTokenExpiryBlock: tokenExpiryDateBlock,
+            signatureBytes: signature,
+        };
+        console.log('get freecall payment metadata');
 
-    return metadata;
-  }
+        return this.generateMetadata(metadataFields);
+    }
 
-  /**
+    /**
      * fetch the free calls available data from daemon
      * @returns {Promise<FreeCallStateReply>}
      * @private
@@ -87,25 +91,27 @@ class FreeCallPaymentStrategy {
      * @returns {Promise<Bytes<Signature>>>}
      * @private
      */
-  async _generateSignature(currentBlockNumber) {
-    const { orgId, serviceId, groupId } = this._serviceClient.getServiceDetails();
-    const { email, tokenToMakeFreeCall, tokenExpiryDateBlock } = this._serviceClient.getFreeCallConfig();
-    if(tokenExpiryDateBlock === 0 || !email || email.length === 0) {
-      throw Error('invalid entries');
+    async _generateSignature(currentBlockNumber) {
+        const { orgId, serviceId, groupId } =
+            this._serviceClient.getServiceDetails();
+        const { email, tokenToMakeFreeCall, tokenExpiryDateBlock } =
+            this._serviceClient.getFreeCallConfig();
+        if (tokenExpiryDateBlock === 0 || !email || email.length === 0) {
+            throw Error('invalid entries');
+        }
+        const enhancedToken = /^0x/.test(tokenToMakeFreeCall.toLowerCase())
+            ? tokenToMakeFreeCall.substring(2, tokenToMakeFreeCall.length)
+            : tokenToMakeFreeCall;
+        return this._serviceClient.signData(
+            { t: 'string', v: '__prefix_free_trial' },
+            { t: 'string', v: email },
+            { t: 'string', v: orgId },
+            { t: 'string', v: serviceId },
+            { t: 'string', v: groupId },
+            { t: 'uint256', v: currentBlockNumber },
+            { t: 'bytes', v: enhancedToken }
+        );
     }
-    const enhancedToken = /^0x/.test(tokenToMakeFreeCall.toLowerCase())
-      ? tokenToMakeFreeCall.substring(2, tokenToMakeFreeCall.length)
-      : tokenToMakeFreeCall;
-    return this._serviceClient.signData(
-      { t: 'string', v: '__prefix_free_trial' },
-      { t: 'string', v: email },
-      { t: 'string', v: orgId },
-      { t: 'string', v: serviceId },
-      { t: 'string', v: groupId },
-      { t: 'uint256', v: currentBlockNumber },
-      { t: 'bytes', v: enhancedToken },
-    );
-  }
 
   /**
      * create the request for the freecall state service grpc
