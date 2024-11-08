@@ -1,7 +1,7 @@
 import url from 'url';
 import { BigNumber } from 'bignumber.js';
 import { isEmpty } from 'lodash';
-import logger from './utils/logger';
+import { debug, error, info } from 'loglevel';
 
 import { toBNString } from './utils/bignumber_helper';
 /* eslint-disable camelcase */
@@ -628,7 +628,7 @@ class BaseServiceClient {
             const channelIdStr = toBNString(channelId);
             const nonceStr = toBNString(nonce);
             const signingAmountStr = toBNString(signingAmount);
-            logger.info(
+            info(
                 `Using PaymentChannel[id: ${channelIdStr}] with nonce: ${nonceStr} and amount: ${signingAmountStr} and `,
                 { tags: ['PaymentChannelManagementStrategy', 'gRPC'] }
             );
@@ -731,69 +731,66 @@ class BaseServiceClient {
 
         const { endpoints } = this.group;
         const endpoint = isEmpty(endpoints) ? undefined : endpoints[0];
-        logger.debug(`Service endpoint: ${endpoint}`, { tags: ['gRPC'] });
-
+        debug(`Service endpoint: ${endpoint}`, { tags: ['gRPC'] });
         return endpoint && url.parse(endpoint); // TODO new URL
     }
 
     _generatePaymentChannelStateServiceClient() {
-        logger.error(
+        error(
             '_generatePaymentChannelStateServiceClient must be implemented in the sub classes'
         );
     }
 
     _getChannelStateRequestMethodDescriptor() {
-        logger.error(
+        error(
             '_getChannelStateRequestMethodDescriptor must be implemented in the sub classes'
         );
     }
 
     _generateModelServiceClient() {
-        logger.error(
+        error(
             '_generateTrainingStateServiceClient must be implemented in the sub classes'
         );
     }
 
     _getModelRequestMethodDescriptor() {
-        logger.error(
+        error(
             '_getModelRequestMethodDescriptor must be implemented in the sub classes'
         );
     }
 
     _getAuthorizationRequestMethodDescriptor() {
-        logger.error(
+        error(
             '_getAuthorizationRequestMethodDescriptor must be implemented in the sub classes'
         );
     }
 
     _getCreateModelRequestMethodDescriptor() {
-        logger.error(
+        error(
             '_getCreateModelRequestMethodDescriptor must be implemented in the sub classes'
         );
     }
 
     _getDeleteModelRequestMethodDescriptor() {
-        logger.error(
+        error(
             '_getDeleteModelRequestMethodDescriptor must be implemented in the sub classes'
         );
     }
 
     _getUpdateModelRequestMethodDescriptor() {
-        logger.error(
+        error(
             '__getUpdateModelRequestMethodDescriptor must be implemented in the sub classes'
         );
     }
 
     _getModelDetailsRequestMethodDescriptor() {
-        logger.error(
+        error(
             '_getModelDetailsRequestMethodDescriptor must be implemented in the sub classes'
         );
     }
 
     get concurrencyManager() {
-        logger.error(
-            'concurrencyManager must be implemented in the sub classes'
-        );
+        error('concurrencyManager must be implemented in the sub classes');
         return undefined;
     }
 }

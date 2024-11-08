@@ -81,7 +81,7 @@ class SnetSDK {
         const group = this._findGroup(serviceMetadata.groups, groupName);
         if (!group) {
             const errorMessage = `Group[name: ${groupName}] not found for orgId: ${orgId} and serviceId: ${serviceId}`;
-            logger.error(errorMessage);
+            error(errorMessage);
             throw new Error(errorMessage);
         }
 
@@ -105,7 +105,7 @@ class SnetSDK {
             return this._paymentChannelManagementStrategy;
         }
 
-        logger.debug(
+        debug(
             'PaymentChannelManagementStrategy not provided, using DefaultPaymentChannelManagementStrategy'
         );
         // return new DefaultPaymentChannelManagementStrategy(this);
@@ -113,7 +113,7 @@ class SnetSDK {
     }
 
     _createIdentity() {
-        logger.error('_createIdentity must be implemented in the sub classes');
+        error('_createIdentity must be implemented in the sub classes');
     }
 }
 

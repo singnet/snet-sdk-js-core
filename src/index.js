@@ -2,7 +2,6 @@ import SnetSDK from './sdk';
 
 export default SnetSDK;
 
-// export { default as logger } from './utils/logger';
 export { default as EncodingUtils } from './utils/encodingUtils';
 export { default as blockChainEvents } from './utils/blockchainEvents';
 export { default as BaseServiceClient } from './BaseServiceClient';
