@@ -4,11 +4,8 @@ export class MetadataGenerator {
     }
 
     generateMetadata(metadata) {
-        console.log('generateMetadata: ', metadata);
-
         const generatedMetadata = [];
         const metadataFields = this.getMetadataFields(metadata);
-        console.log('metadataFields: ', metadataFields);
 
         Object.keys(metadataFields).forEach((dataField) => {
             if (!metadata.hasOwnProperty(dataField)) {
@@ -43,7 +40,7 @@ export class PaymentMetadataGenerator extends MetadataGenerator {
             },
             signatureBytes: {
                 header: 'snet-payment-channel-signature-bin',
-                value: metadata?.signatureBytes, //.toString('base64'),
+                value: metadata?.signatureBytes?.toString('base64'),
             },
         };
     }
@@ -63,7 +60,7 @@ export class PrepaidMetadataGenerator extends MetadataGenerator {
             },
             prepaidAuthTokenBytes: {
                 header: 'snet-prepaid-auth-token-bin',
-                value: metadata?.prepaidAuthTokenBytes,
+                value: metadata?.prepaidAuthTokenBytes?.toString('base64'),
             },
         };
     }
@@ -83,7 +80,7 @@ export class FreecallMetadataGenerator extends MetadataGenerator {
             },
             freecallAuthToken: {
                 header: 'snet-free-call-auth-token-bin',
-                value: metadata?.freecallAuthToken,
+                value: metadata?.freecallAuthToken?.toString('base64'),
             },
             freecallTokenExpiryBlock: {
                 header: 'snet-free-call-token-expiry-block',
@@ -91,7 +88,7 @@ export class FreecallMetadataGenerator extends MetadataGenerator {
             },
             signatureBytes: {
                 header: 'snet-payment-channel-signature-bin',
-                value: metadata?.signatureBytes,
+                value: metadata?.signatureBytes?.toString('base64'),
             },
         };
     }

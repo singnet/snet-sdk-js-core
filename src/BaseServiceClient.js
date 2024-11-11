@@ -182,12 +182,13 @@ class BaseServiceClient {
                 this._paymentChannelManagementStrategy
             );
 
-            const metadataValues =
+            const metadata =
                 await this._paymentChannelManagementStrategy.getPaymentMetadata(
                     this
                 );
-            const metadata = metadataGenerator.generateMetadata(metadataValues);
-            console.log('metadata: ', metadata);
+
+            // const metadata = metadataGenerator.generateMetadata(metadataValues);
+            console.log('_fetchPaymentMetadata metadata: ', metadata);
 
             return metadata;
         }
