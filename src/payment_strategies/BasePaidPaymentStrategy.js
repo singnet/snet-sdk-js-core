@@ -1,4 +1,5 @@
-import logger from '../utils/logger';
+import { error } from 'loglevel';
+import PaymentChannelProvider from '../mpe/PaymentChannelProvider';
 
 class BasePaidPaymentStrategy {
   /**
@@ -56,9 +57,9 @@ class BasePaidPaymentStrategy {
     return selectedPaymentChannel;
   }
 
-  _getPrice() {
-    logger.error('_getPrice must be implemented in the sub classes');
-  }
+    _getPrice() {
+        error('_getPrice must be implemented in the sub classes');
+    }
 
   /**
    * @param {PaymentChannel} channel

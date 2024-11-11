@@ -1,6 +1,7 @@
 import { toBNString } from '../utils/bignumber_helper';
 import EncodingUtils from '../utils/encodingUtils';
-import logger from '../utils/logger';
+import { FreecallMetadataGenerator } from '../utils/metadataUtils';
+import { error, info } from 'loglevel';
 
 class FreeCallPaymentStrategy {
   constructor(serviceClient) {
@@ -14,24 +15,25 @@ class FreeCallPaymentStrategy {
      * Check if there is any freecalls left for x service.
      * @returns {Promise<boolean>}
      */
-  async isFreeCallAvailable() {
-    try {
-      const freeCallsAvailableReply = await this._getFreeCallsAvailable();
-      // Bypassing free calls if the token is empty
-      const freeCallsAvailable = freeCallsAvailableReply
-        ? freeCallsAvailableReply.getFreeCallsAvailable()
-        : 0;
-      logger.info('is freecalls available', freeCallsAvailable, {
-        tags: ['freecalls'],
-      });
-      return freeCallsAvailable > 0;
-    } catch (error) {
-      logger.error('is freecall availible error', error, {
-        tags: ['freecalls'],
-      });
-      return false;
+    async isFreeCallAvailable() {
+        try {
+            const freeCallsAvailableReply = await this._getFreeCallsAvailable();
+            // Bypassing free calls if the token is empty
+            const freeCallsAvailable = freeCallsAvailableReply
+                ? freeCallsAvailableReply.getFreeCallsAvailable()
+                : 0;
+
+            info('is freecalls available', freeCallsAvailable, {
+                tags: ['freecalls'],
+            });
+            return freeCallsAvailable > 0;
+        } catch (err) {
+            error('is freecall availible error', err, {
+                tags: ['freecalls'],
+            });
+            return false;
+        }
     }
-  }
 
   /**
      * generate free call payment metadata
@@ -63,28 +65,32 @@ class FreeCallPaymentStrategy {
      * @returns {Promise<FreeCallStateReply>}
      * @private
      */
-  async _getFreeCallsAvailable() {
-    const freeCallStateRequest = await this._getFreeCallStateRequest();
-    if(!freeCallStateRequest) {
-      // Bypassing free calls if the token is empty
-      return undefined;
-    }
-    return new Promise((resolve, reject) => {
-      this._freeCallStateServiceClient.getFreeCallsAvailable(
-        freeCallStateRequest,
-        (error, responseMessage) => {
-          if(error) {
-            logger.error('getting freecalls error', error, {
-              tags: ['freecalls'],
+    async _getFreeCallsAvailable() {
+        const freeCallStateRequest = await this._getFreeCallStateRequest();
+        if (!freeCallStateRequest) {
+            info('freecalls state request is undefined', {
+                tags: ['freecalls'],
             });
-            reject(error);
-          } else {
-            resolve(responseMessage);
-          }
-        },
-      );
-    });
-  }
+            // Bypassing free calls if the token is empty
+            return undefined;
+        }
+
+        return new Promise((resolve, reject) =>
+            this._freeCallStateServiceClient.getFreeCallsAvailable(
+                freeCallStateRequest,
+                (err, responseMessage) => {
+                    if (err) {
+                        error('getting freecalls error', err, {
+                            tags: ['freecalls'],
+                        });
+                        reject(err);
+                    } else {
+                        resolve(responseMessage);
+                    }
+                }
+            )
+        );
+    }
 
   /**
      *
