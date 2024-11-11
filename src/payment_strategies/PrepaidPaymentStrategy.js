@@ -4,24 +4,21 @@ import EncodingUtils from '../utils/encodingUtils';
 class PrepaidPaymentStrategy extends BasePaidPaymentStrategy {
     /**
      * @param {BaseServiceClient} serviceClient
-     * @param {ConcurrencyManager} concurrencyManager
      * @param {number} blockOffset
      * @param {number} callAllowance
      */
-  constructor(serviceClient, blockOffset = 240, callAllowance = 1) {
-    super(serviceClient, blockOffset, callAllowance);
-    this._encodingUtils = new EncodingUtils();
-    this._concurrencyManager = serviceClient.concurrencyManager;
-  }
+    constructor(serviceClient, blockOffset = 240, callAllowance = 1) {
+        super(serviceClient, blockOffset, callAllowance);
+        this._encodingUtils = new EncodingUtils();
+        this._concurrencyManager = serviceClient.concurrencyManager;
+    }
 
-  /**
+    /**
      * @returns {Promise<[{'snet-payment-type': string}, {'snet-payment-channel-id': string}, {'snet-payment-channel-nonce': string}, {'snet-prepaid-auth-token-bin': *}]>}
      */
     async getPaymentMetadata(preselectChannelId) {
-        console.log("this._concurrencyManager: ", this._concurrencyManager);
-        
         if (!this._concurrencyManager) {
-            throw new Error("concurrency manager not found!")
+            throw new Error('concurrency manager not found!');
         }
 
         const channel = await this._selectChannel(preselectChannelId);
@@ -37,7 +34,6 @@ class PrepaidPaymentStrategy extends BasePaidPaymentStrategy {
             channelNonce: channel.state.nonce,
             prepaidAuthTokenBytes: tokenBytes,
         };
-        console.log("get prepaid payment metadata");
         return metadataFields;
     }
 

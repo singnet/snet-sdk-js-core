@@ -35,7 +35,7 @@ class FreeCallPaymentStrategy {
         }
     }
 
-  /**
+    /**
      * generate free call payment metadata
      * @returns {Promise<({'snet-free-call-auth-token-bin': FreeCallConfig.tokenToMakeFreeCall}|{'snet-free-call-token-expiry-block': *}|{'snet-payment-type': string}|{'snet-free-call-user-id': *}|{'snet-current-block-number': *})[]>}
      */
@@ -92,7 +92,7 @@ class FreeCallPaymentStrategy {
         );
     }
 
-  /**
+    /**
      *
      * @returns {Promise<Bytes<Signature>>>}
      * @private
@@ -119,7 +119,7 @@ class FreeCallPaymentStrategy {
         );
     }
 
-  /**
+    /**
      * create the request for the freecall state service grpc
      * @returns {FreeCallStateRequest}
      * @private
