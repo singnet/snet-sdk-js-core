@@ -12,7 +12,6 @@ export class MetadataGenerator {
                 return;
             }
             const field = metadataFields[dataField];
-            console.log(field);
             generatedMetadata.push({
                 [field.header]: field.value,
             });

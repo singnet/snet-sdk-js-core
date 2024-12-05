@@ -5,11 +5,14 @@ import PaidCallPaymentStrategy from './PaidCallPaymentStrategy';
 class DefaultPaymentStrategy {
     /**
      * Initializing the payment strategy
+     * @param {Account} account
      * @param {number} concurrentCalls
      */
-    constructor(concurrentCalls = 1) {
+    constructor(account, concurrentCalls = 1) {
+        this._account = account;
         this._concurrentCalls = concurrentCalls;
         this._channelId = undefined;
+        // serviceMetadata is required for getting any strategies. Maybe at to params of class?
     }
 
     get concurrentCalls() {
@@ -22,12 +25,12 @@ class DefaultPaymentStrategy {
 
     /**
      * map the metadata for the gRPC call
-     * @param {BaseServiceClient} serviceClient
+     * @param {ServiceMetadataProvider} serviceMetadata
      * @returns {Promise<({'snet-payment-type': string}|{'snet-payment-channel-id': string}|{'snet-payment-channel-nonce': string}|{'snet-payment-channel-amount': string}|{'snet-payment-channel-signature-bin': Buffer})[]>}
      */
-    async getPaymentMetadata(serviceClient) {
+    async getPaymentMetadata(serviceMetadata) {
         const freeCallPaymentStrategy = new FreeCallPaymentStrategy(
-            serviceClient
+            this._account, serviceMetadata
         );
         const isFreeCallsAvailable =
             await freeCallPaymentStrategy.isFreeCallAvailable();
@@ -35,13 +38,13 @@ class DefaultPaymentStrategy {
         let metadata;
         if (isFreeCallsAvailable) {
             metadata = await freeCallPaymentStrategy.getPaymentMetadata();
-        } else if (serviceClient.concurrencyFlag) {
-            const paymentStrategy = new PrepaidPaymentStrategy(serviceClient);
+        } else if (serviceMetadata.concurrencyFlag) {
+            const paymentStrategy = new PrepaidPaymentStrategy(this._account, serviceMetadata);
             metadata = await paymentStrategy.getPaymentMetadata(
                 this._channelId
             );
         } else {
-            const paymentStrategy = new PaidCallPaymentStrategy(serviceClient);
+            const paymentStrategy = new PaidCallPaymentStrategy(this._account, serviceMetadata);
             metadata = await paymentStrategy.getPaymentMetadata();
         }
 
@@ -53,8 +56,8 @@ class DefaultPaymentStrategy {
      * @param {ServiceClient} serviceClient
      * @returns {Promise<{channelId: BigNumber, concurrencyToken: String}>}
      */
-    async getConcurrencyTokenAndChannelId(serviceClient) {
-        const paymentStrategy = new PrepaidPaymentStrategy(serviceClient);
+    async getConcurrencyTokenAndChannelId(serviceMetadata) {
+        const paymentStrategy = new PrepaidPaymentStrategy(this._account, serviceMetadata);
         const channel = await paymentStrategy._selectChannel();
         const concurrencyToken = await paymentStrategy.getConcurrencyToken(
             channel

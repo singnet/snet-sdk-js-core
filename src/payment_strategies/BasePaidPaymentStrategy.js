@@ -3,12 +3,19 @@ import PaymentChannelProvider from '../mpe/PaymentChannelProvider';
 
 class BasePaidPaymentStrategy {
     /**
-     * @param {BaseServiceClient} serviceClient
+     * @param {Account} account
+     * @param {ServiceMetadataProvider} serviceMetadata
      * @param {number} blockOffset
      * @param {number} callAllowance
      */
-    constructor(serviceClient, blockOffset = 240, callAllowance = 1) {
-        this._serviceClient = serviceClient;
+    constructor(
+        account,
+        serviceMetadata,
+        blockOffset = 240,
+        callAllowance = 1
+    ) {
+        this._account = account;
+        this._serviceMetadata = serviceMetadata;
         this._blockOffset = blockOffset;
         this._callAllowance = callAllowance;
     }
@@ -18,9 +25,9 @@ class BasePaidPaymentStrategy {
      * @protected
      */
     async _selectChannel(preselectChannelId) {
-        const { account } = this._serviceClient;
         const paymentChannelProvider = new PaymentChannelProvider(
-            this._serviceClient
+            this._account,
+            this._serviceMetadata
         );
 
         await paymentChannelProvider.updateChannelStates();
@@ -28,9 +35,12 @@ class BasePaidPaymentStrategy {
         const { paymentChannels } = paymentChannelProvider;
         const serviceCallPrice = this._getPrice();
         const extendedChannelFund = serviceCallPrice * this._callAllowance;
-        const mpeBalance = await account.escrowBalance();
+        const mpeBalance = await this._account.escrowBalance();
+        const currentBlockNumber = await this._account.getCurrentBlockNumber();
         const defaultExpiration =
-            await this._serviceClient.defaultChannelExpiration();
+            await this._serviceMetadata.defaultChannelExpiration(
+                currentBlockNumber
+            );
         const extendedExpiry = defaultExpiration + this._blockOffset;
 
         if (preselectChannelId) {
@@ -45,9 +55,6 @@ class BasePaidPaymentStrategy {
         let selectedPaymentChannel;
 
         if (paymentChannels.length < 1) {
-            const paymentChannelProvider = new PaymentChannelProvider(
-                this._serviceClient
-            );
             if (serviceCallPrice > mpeBalance) {
                 selectedPaymentChannel =
                     await paymentChannelProvider.depositAndOpenChannel(

@@ -2,9 +2,8 @@ import MPEAbi from 'singularitynet-platform-contracts/abi/MultiPartyEscrow';
 import MPENetworks from 'singularitynet-platform-contracts/networks/MultiPartyEscrow';
 import Web3 from 'web3';
 import PaymentChannel from './PaymentChannel';
-// // import logger from './utils/logger';
-// import { log as logger } from 'loglevel';
 import { toBNString } from '../utils/bignumber_helper';
+import { info, debug } from 'loglevel';
 
 class MPEContract {
     /**
@@ -86,18 +85,18 @@ class MPEContract {
      * @param {BigNumber} expiry - The expiry of the payment channel in terms of block number
      * @returns {Promise.<TransactionReceipt>}
      */
-    async openChannel(account, service, amountInCogs, expiry) {
+    async openChannel(account, group, amountInCogs, expiry) {
         const amount = toBNString(amountInCogs);
         const expiryStr = toBNString(expiry);
         const {
             payment_address: recipientAddress,
             group_id_in_bytes: groupId,
-        } = service.group;
+        } = group;
 
-        // logger.info(
-        //     `Opening new payment channel [amount: ${amount}, expiry: ${expiryStr}]`,
-        //     { tags: ['MPE'] }
-        // );
+        info(
+            `Opening new payment channel [amount: ${amount}, expiry: ${expiryStr}]`,
+            { tags: ['MPE'] }
+        );
         const openChannelOperation = this.contract.methods.openChannel;
         try {
             const signerAddress = await account.getSignerAddress();
@@ -127,13 +126,13 @@ class MPEContract {
      * @param {BigNumber} expiry - The expiry of the payment channel in terms of block number
      * @returns {Promise.<TransactionReceipt>}
      */
-    async depositAndOpenChannel(account, service, amountInCogs, expiry) {
+    async depositAndOpenChannel(account, group, amountInCogs, expiry) {
         const amount = toBNString(amountInCogs);
         const expiryStr = toBNString(expiry);
         const {
             payment_address: recipientAddress,
             group_id_in_bytes: groupId,
-        } = service.group;
+        } = group;
         try {
             const alreadyApprovedAmount = await account.allowance();
             if (amountInCogs > alreadyApprovedAmount) {
@@ -298,7 +297,12 @@ class MPEContract {
      * open channels from
      * @returns {Promise.<PaymentChannel[]>}
      */
-    async getPastOpenChannels(account, service, startingBlockNumber) {
+    async getPastOpenChannels(
+        account,
+        serviceMetadata,
+        group,
+        startingBlockNumber
+    ) {
         try {
             const fromBlock =
                 startingBlockNumber || (await this._deploymentBlockNumber());
@@ -310,21 +314,20 @@ class MPEContract {
                     MPENetworks[this._networkId].address
                 );
             }
-            // logger.debug(
-            //     `Fetching all payment channel open events starting at block: ${fromBlock}`,
-            //     { tags: ['MPE'] }
-            // );
+            debug(
+                `Fetching all payment channel open events starting at block: ${fromBlock}`,
+                { tags: ['MPE'] }
+            );
 
             const address = await account.getAddress();
-            const decodedData = Buffer.from(
-                service.group.group_id,
-                'base64'
-            ).toString('hex');
+            const decodedData = Buffer.from(group.group_id, 'base64').toString(
+                'hex'
+            );
             const groupId = `0x${decodedData}`;
             const options = {
                 filter: {
                     sender: address,
-                    recipient: service.group.payment_address,
+                    recipient: group.payment_address,
                     groupId,
                 },
                 fromBlock,
@@ -340,7 +343,7 @@ class MPEContract {
                     channelId,
                     this._web3,
                     account,
-                    service,
+                    serviceMetadata,
                     this
                 );
             });

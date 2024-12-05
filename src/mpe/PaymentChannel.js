@@ -10,15 +10,15 @@ class PaymentChannel {
      * @param {BigNumber} channelId
      * @param {Web3} web3
      * @param {Account} account
-     * @param {BaseServiceClient} service
+     * @param {ServiceMetadataProvider} serviceMetadata
      * @param {MPEContract} mpeContract
      */
-    constructor(channelId, web3, account, service, mpeContract) {
+    constructor(channelId, web3, account, serviceMetadata, mpeContract) {
         this._channelId = channelId;
         this._web3 = web3;
         this._account = account;
         this._mpeContract = mpeContract;
-        this._serviceClient = service;
+        this._serviceMetadata = serviceMetadata;
         this._state = {
             nonce: new BigNumber(0),
             currentSignedAmount: new BigNumber(0),
@@ -103,10 +103,8 @@ class PaymentChannel {
         const latestChannelInfoOnBlockchain = await this._mpeContract.channels(
             this._channelId
         );
-        console.log("latestChannelInfoOnBlockchain: ", latestChannelInfoOnBlockchain);
 
         const currentState = await this._currentChannelState();
-        console.log('currentState: ', currentState);
         const { currentSignedAmount, nonce: currentNonce } = currentState;
         const {
             nonce,
@@ -143,7 +141,8 @@ class PaymentChannel {
         );
         try {
             const paymentChannelProvider = new PaymentChannelProvider(
-                this._serviceClient
+                this._account,
+                this._serviceMetadata
             );
             const response = await paymentChannelProvider.getChannelState(
                 this._channelId

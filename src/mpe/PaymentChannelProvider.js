@@ -2,12 +2,14 @@ import { debug, info } from 'loglevel';
 import { toBNString } from '../utils/bignumber_helper';
 
 class PaymentChannelProvider {
-    constructor(serviceClient) {
-        this.options = serviceClient._options;
-        this.account = serviceClient.account;
-        this.mpeContract = serviceClient.mpeContract;
-        this.serviceClient = serviceClient;
+    constructor(account, serviceMetadata, ChannelModelProvider) {
+        this.options = serviceMetadata._options;
+        this.account = account;
+        this.mpeContract = serviceMetadata.mpeContract;
+        this.group = serviceMetadata.group;
+        this.serviceMetadata = serviceMetadata;
         this.paymentChannels = [];
+        this.ChannelModelProvider = serviceMetadata?.ChannelModelProvider; //should be implemented as subclass
         this.lastReadBlock;
     }
 
@@ -19,9 +21,9 @@ class PaymentChannelProvider {
                 return { currentBlockNumber, signatureBytes };
             }
             const currentBlockNumber =
-                await this.serviceClient.getCurrentBlockNumber();
+                await this.account.getCurrentBlockNumber();
             const channelIdStr = toBNString(channelId);
-            const signatureBytes = await this.serviceClient.signData(
+            const signatureBytes = await this.account.signData(
                 { t: 'string', v: '__get_channel_state' },
                 { t: 'address', v: this.mpeContract.address },
                 { t: 'uint256', v: channelIdStr },
@@ -44,7 +46,7 @@ class PaymentChannelProvider {
         channelIdBytes.writeUInt32BE(toBNString(channelId), 0);
 
         const ChannelStateRequest =
-            this.serviceClient._getChannelStateRequestMethodDescriptor();
+            this.ChannelModelProvider.getChannelStateRequestMethodDescriptor();
         const channelStateRequest = new ChannelStateRequest();
         channelStateRequest.setChannelId(channelIdBytes);
         channelStateRequest.setSignature(signatureBytes);
@@ -56,7 +58,8 @@ class PaymentChannelProvider {
         try {
             const openChannels = await this.mpeContract.getPastOpenChannels(
                 this.account,
-                this.serviceClient,
+                this.serviceMetadata,
+                this.group,
                 receipt.blockNumber
             );
             const newPaymentChannel = openChannels[0];
@@ -76,14 +79,12 @@ class PaymentChannelProvider {
      */
     async getChannelState(channelId) {
         const channelStateRequest = await this._channelStateRequest(channelId);
+        console.log('this.ChannelModelProvider: ', this.ChannelModelProvider);
 
         return new Promise((resolve, reject) => {
             const paymentChannelStateServiceClient =
-                this.serviceClient._generatePaymentChannelStateServiceClient();
-            console.log(
-                'this.serviceClient.paymentChannelStateServiceClient: ',
-                paymentChannelStateServiceClient
-            );
+                this.ChannelModelProvider.generatePaymentChannelStateServiceClient();
+
             paymentChannelStateServiceClient.getChannelState(
                 channelStateRequest,
                 (err, response) => {
@@ -101,11 +102,11 @@ class PaymentChannelProvider {
      * @returns {Promise.<PaymentChannel[]>}
      */
     async loadOpenChannels() {
-        const currentBlockNumber =
-            await this.serviceClient.getCurrentBlockNumber();
+        const currentBlockNumber = await this.account.getCurrentBlockNumber();
         const newPaymentChannels = await this.mpeContract.getPastOpenChannels(
             this.account,
-            this.serviceClient,
+            this.serviceMetadata,
+            this.group,
             this.lastReadBlock
         );
         debug(
@@ -150,7 +151,7 @@ class PaymentChannelProvider {
         try {
             const newChannelReceipt = await this.mpeContract.openChannel(
                 this.account,
-                this.serviceClient,
+                this.group,
                 amount,
                 expiry
             );
@@ -170,7 +171,7 @@ class PaymentChannelProvider {
             const newFundedChannelReceipt =
                 await this.mpeContract.depositAndOpenChannel(
                     this.account,
-                    this.serviceClient,
+                    this.group,
                     amount,
                     expiry
                 );

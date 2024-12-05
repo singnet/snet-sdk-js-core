@@ -114,6 +114,7 @@ class Account {
      * @type {string}
      */
     async getAddress() {
+        // TODO
         return this._identity.getAddress();
     }
 
@@ -121,6 +122,7 @@ class Account {
      * @type {string}
      */
     async getSignerAddress() {
+        // TODO
         return this.getAddress();
     }
 
@@ -133,6 +135,7 @@ class Account {
      */
     async signData(...data) {
         try {
+            info(`signing message: ${data}`);
             const sha3Message = this._web3.utils.soliditySha3(...data);
             const signature = await this._identity.signData(sha3Message);
             const stripped = signature.substring(2, signature.length);
@@ -218,6 +221,18 @@ class Account {
             return await this._web3.eth.net.getId();
         } catch (error) {
             throw new Error('get chain id error: ', error);
+        }
+    }
+
+    /**
+     * find the current blocknumber
+     * @returns {Promise<number>}
+     */
+    async getCurrentBlockNumber() {
+        try {
+            return await this._web3.eth.getBlockNumber();
+        } catch (error) {
+            throw new Error('getting current block number error: ', error);
         }
     }
 }

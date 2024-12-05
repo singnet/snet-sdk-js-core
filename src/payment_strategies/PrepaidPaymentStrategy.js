@@ -3,14 +3,20 @@ import EncodingUtils from '../utils/encodingUtils';
 
 class PrepaidPaymentStrategy extends BasePaidPaymentStrategy {
     /**
-     * @param {BaseServiceClient} serviceClient
+     * @param {Account} account
+     * @param {ServiceMetadataProvider} serviceMetadata
      * @param {number} blockOffset
      * @param {number} callAllowance
      */
-    constructor(serviceClient, blockOffset = 240, callAllowance = 1) {
-        super(serviceClient, blockOffset, callAllowance);
+    constructor(
+        account,
+        serviceMetadata,
+        blockOffset = 240,
+        callAllowance = 1
+    ) {
+        super(account, serviceMetadata, blockOffset, callAllowance);
         this._encodingUtils = new EncodingUtils();
-        this._concurrencyManager = serviceClient.concurrencyManager;
+        this._concurrencyManager = serviceMetadata.concurrencyManager;
     }
 
     /**
@@ -60,7 +66,7 @@ class PrepaidPaymentStrategy extends BasePaidPaymentStrategy {
         }
 
         return (
-            this._serviceClient._pricePerServiceCall.toNumber() *
+            this._serviceMetadata.pricePerServiceCall.toNumber() *
             this._concurrencyManager.concurrentCalls
         );
     }

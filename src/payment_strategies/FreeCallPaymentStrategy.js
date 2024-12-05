@@ -4,8 +4,13 @@ import { FreecallMetadataGenerator } from '../utils/metadataUtils';
 import { error, info } from 'loglevel';
 
 class FreeCallPaymentStrategy {
-    constructor(serviceClient) {
-        this._serviceClient = serviceClient;
+    /**
+     * @param {Account} account
+     * @param {ServiceMetadataProvider} serviceMetadata
+     */
+    constructor(account, serviceMetadata) {
+        this._account = account;
+        this._serviceMetadata = serviceMetadata;
         this._freeCallStateServiceClient = undefined; // must be implemented as subclass property
         this._freeCallStateMethodDescriptor = undefined; // must be implemented as subclass property
         this._encodingUtils = new EncodingUtils();
@@ -18,18 +23,14 @@ class FreeCallPaymentStrategy {
      */
     async isFreeCallAvailable() {
         try {
-            const freeCallsAvailableReply = await this._getFreeCallsAvailable();
-            // Bypassing free calls if the token is empty
-            const freeCallsAvailable = freeCallsAvailableReply
-                ? freeCallsAvailableReply.getFreeCallsAvailable()
-                : 0;
+            const freeCallsAvailable = await this.getFreeCallsAvailable();
 
             info('is freecalls available', freeCallsAvailable, {
                 tags: ['freecalls'],
             });
             return freeCallsAvailable > 0;
         } catch (err) {
-            error('is freecall availible error', err, {
+            error('is freecall available error', err, {
                 tags: ['freecalls'],
             });
             return false;
@@ -42,9 +43,8 @@ class FreeCallPaymentStrategy {
      */
     async getPaymentMetadata() {
         const { email, tokenToMakeFreeCall, tokenExpiryDateBlock } =
-            this._serviceClient.getFreeCallConfig();
-        const currentBlockNumber =
-            await this._serviceClient.getCurrentBlockNumber();
+            this._serviceMetadata.getFreeCallConfig();
+        const currentBlockNumber = await this._account.getCurrentBlockNumber();
         const signature = await this._generateSignature(currentBlockNumber);
         const tokenBytes =
             this._encodingUtils.hexStringToBytes(tokenToMakeFreeCall);
@@ -65,7 +65,7 @@ class FreeCallPaymentStrategy {
      * @returns {Promise<FreeCallStateReply>}
      * @private
      */
-    async _getFreeCallsAvailable() {
+    async getFreeCallsAvailable() {
         const freeCallStateRequest = await this._getFreeCallStateRequest();
         if (!freeCallStateRequest) {
             info('freecalls state request is undefined', {
@@ -75,7 +75,7 @@ class FreeCallPaymentStrategy {
             return undefined;
         }
 
-        return new Promise((resolve, reject) =>
+        const freeCallsAvailableReply = await new Promise((resolve, reject) =>
             this._freeCallStateServiceClient.getFreeCallsAvailable(
                 freeCallStateRequest,
                 (err, responseMessage) => {
@@ -90,6 +90,12 @@ class FreeCallPaymentStrategy {
                 }
             )
         );
+
+        const freeCallsAvailable = freeCallsAvailableReply
+            ? freeCallsAvailableReply.getFreeCallsAvailable()
+            : 0;
+
+        return freeCallsAvailable;
     }
 
     /**
@@ -99,16 +105,16 @@ class FreeCallPaymentStrategy {
      */
     async _generateSignature(currentBlockNumber) {
         const { orgId, serviceId, groupId } =
-            this._serviceClient.getServiceDetails();
+            this._serviceMetadata.getServiceDetails();
         const { email, tokenToMakeFreeCall, tokenExpiryDateBlock } =
-            this._serviceClient.getFreeCallConfig();
+            this._serviceMetadata.getFreeCallConfig();
         if (tokenExpiryDateBlock === 0 || !email || email.length === 0) {
             throw Error('invalid entries');
         }
         const enhancedToken = /^0x/.test(tokenToMakeFreeCall.toLowerCase())
             ? tokenToMakeFreeCall.substring(2, tokenToMakeFreeCall.length)
             : tokenToMakeFreeCall;
-        return this._serviceClient.signData(
+        return this._account.signData(
             { t: 'string', v: '__prefix_free_trial' },
             { t: 'string', v: email },
             { t: 'string', v: orgId },
@@ -157,12 +163,11 @@ class FreeCallPaymentStrategy {
     }
 
     async _getFreeCallStateRequestProperties() {
-        const freecallConfig = this._serviceClient.getFreeCallConfig();
+        const freecallConfig = this._serviceMetadata.getFreeCallConfig();
 
         const { email, tokenToMakeFreeCall, tokenExpiryDateBlock } =
             freecallConfig;
-        const currentBlockNumber =
-            await this._serviceClient.getCurrentBlockNumber();
+        const currentBlockNumber = await this._account.getCurrentBlockNumber();
         const signature = await this._generateSignature(currentBlockNumber);
         return {
             userId: email,
@@ -179,7 +184,7 @@ class FreeCallPaymentStrategy {
     //  * @private
     //  */
     // _generateFreeCallStateServiceClient() {
-    //     const serviceEndpoint = this._serviceClient._getServiceEndpoint();
+    //     const serviceEndpoint = this._serviceMetadata._getServiceEndpoint();
     //     const grpcCredentials = this._getGrpcCredentials(serviceEndpoint);
     //     return new services.FreeCallStateServiceClient(
     //         serviceEndpoint.host,

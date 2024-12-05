@@ -2,12 +2,18 @@ import BasePaidPaymentStrategy from './BasePaidPaymentStrategy';
 
 class PaidCallPaymentStrategy extends BasePaidPaymentStrategy {
     /**
-     * @param {BaseServiceClient} serviceClient
+     * @param {Account} account
+     * @param {ServiceMetadataProvider} serviceMetadata
      * @param {number} blockOffset
      * @param {number} callAllowance
      */
-    constructor(serviceClient, blockOffset = 240, callAllowance = 1) {
-        super(serviceClient, blockOffset, callAllowance);
+    constructor(
+        account,
+        serviceMetadata,
+        blockOffset = 240,
+        callAllowance = 1
+    ) {
+        super(account, serviceMetadata, blockOffset, callAllowance);
     }
 
     /**
@@ -35,9 +41,10 @@ class PaidCallPaymentStrategy extends BasePaidPaymentStrategy {
     }
 
     async _generateSignature(channelId, nonce, amount) {
-        return this._serviceClient.signData(
+        return this.account.signData(
+            //account
             { t: 'string', v: '__MPE_claim_message' },
-            { t: 'address', v: this._serviceClient.mpeContract.address },
+            { t: 'address', v: this.serviceMetadata.mpeContract.address }, //service metadata
             { t: 'uint256', v: channelId },
             { t: 'uint256', v: nonce },
             { t: 'uint256', v: amount }
@@ -50,7 +57,7 @@ class PaidCallPaymentStrategy extends BasePaidPaymentStrategy {
      * @private
      */
     _getPrice() {
-        return this._serviceClient._pricePerServiceCall.toNumber();
+        return this.serviceMetadata.pricePerServiceCall.toNumber(); //service metadata
     }
 }
 
