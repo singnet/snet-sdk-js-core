@@ -17,6 +17,7 @@ class PaidCallPaymentStrategy extends BasePaidPaymentStrategy {
     }
 
     /**
+     * Get the metadata for the gRPC payment call
      * @returns {Promise<[{'snet-payment-type': string}, {'snet-payment-channel-id': string}, {'snet-payment-channel-nonce': string}, {'snet-payment-channel-amount': string}, {'snet-payment-channel-signature-bin': Buffer}]>}
      */
     async getPaymentMetadata() {
@@ -40,11 +41,18 @@ class PaidCallPaymentStrategy extends BasePaidPaymentStrategy {
         return metadataFields;
     }
 
+    /**
+     * Generate signature for getting payment metadata
+     * @param {uint256} channelId
+     * @param {uint256} nonce
+     * @param {uint256} amount
+     * @returns {Promise<Buffer>}
+     * @private
+     */
     async _generateSignature(channelId, nonce, amount) {
         return this.account.signData(
-            //account
             { t: 'string', v: '__MPE_claim_message' },
-            { t: 'address', v: this.serviceMetadata.mpeContract.address }, //service metadata
+            { t: 'address', v: this.serviceMetadata.mpeContract.address },
             { t: 'uint256', v: channelId },
             { t: 'uint256', v: nonce },
             { t: 'uint256', v: amount }
@@ -57,7 +65,7 @@ class PaidCallPaymentStrategy extends BasePaidPaymentStrategy {
      * @private
      */
     _getPrice() {
-        return this.serviceMetadata.pricePerServiceCall.toNumber(); //service metadata
+        return this.serviceMetadata.pricePerServiceCall.toNumber();
     }
 }
 

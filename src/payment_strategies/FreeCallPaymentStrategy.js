@@ -38,7 +38,7 @@ class FreeCallPaymentStrategy {
     }
 
     /**
-     * generate free call payment metadata
+     * Get the metadata for the gRPC free-call
      * @returns {Promise<({'snet-free-call-auth-token-bin': FreeCallConfig.tokenToMakeFreeCall}|{'snet-free-call-token-expiry-block': *}|{'snet-payment-type': string}|{'snet-free-call-user-id': *}|{'snet-current-block-number': *})[]>}
      */
     async getPaymentMetadata() {
@@ -61,7 +61,7 @@ class FreeCallPaymentStrategy {
     }
 
     /**
-     * fetch the free calls available data from daemon
+     * Fetch the free calls available data from daemon
      * @returns {Promise<FreeCallStateReply>}
      * @private
      */
