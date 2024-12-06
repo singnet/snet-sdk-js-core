@@ -23,7 +23,6 @@ export default class IPFSMetadataProvider {
         debug(
             `Fetching service metadata [org: ${orgId} | service: ${serviceId}]`
         );
-        console.log(`org: ${orgId} | service: ${serviceId}`);
 
         let orgIdBytes = this._web3.utils.fromAscii(orgId);
         orgIdBytes = orgIdBytes.padEnd(66, '0'); // 66 = '0x' + 64 hex characters
@@ -33,13 +32,11 @@ export default class IPFSMetadataProvider {
 
         try {
             const orgMetadata = await this._fetchOrgMetadata(orgIdBytes);
-            console.log('orgMetadata: ', orgMetadata);
 
             const serviceMetadata = await this._fetchServiceMetadata(
                 orgIdBytes,
                 serviceIdBytes
             );
-            console.log('serviceMetadata: ', serviceMetadata);
 
             return Promise.resolve(
                 this._enhanceServiceGroupDetails(serviceMetadata, orgMetadata)

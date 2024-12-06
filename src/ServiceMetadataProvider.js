@@ -1,5 +1,4 @@
 import { PaymentMetadataGenerator } from './utils/metadataUtils';
-import url from 'url';
 import { BigNumber } from 'bignumber.js';
 import { isEmpty } from 'lodash';
 import { debug } from 'loglevel';
@@ -178,13 +177,19 @@ class ServiceMetadataProvider {
 
     getServiceEndpoint() {
         if (this._options.endpoint) {
-            return url.parse(this._options.endpoint); // TODO new URL
+            return new URL(this._options.endpoint);
         }
 
         const { endpoints } = this.group;
-        const endpoint = isEmpty(endpoints) ? undefined : endpoints[0];
-        debug(`Service endpoint: ${endpoint}`, { tags: ['gRPC'] });
-        return endpoint && url.parse(endpoint); // TODO new URL
+        if (isEmpty(endpoints) || endpoints.length === 0) {
+            throw new Error('Service endpoints is empty');
+        }
+        const endpoint = endpoints[0];
+        debug(`Service endpoint: ${endpoint}`, {
+            tags: ['gRPC'],
+        });
+
+        return new URL(endpoint);
     }
 }
 
