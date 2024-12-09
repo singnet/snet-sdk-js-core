@@ -19,7 +19,7 @@ class TrainingProvider {
     /**
      * Initializing the training provider
      * @param {Account} account
-     * @param {string} serviceEndpoint
+     * @param {URL} serviceEndpoint
      */
     constructor(account, serviceEndpoint) {
         this.account = account;

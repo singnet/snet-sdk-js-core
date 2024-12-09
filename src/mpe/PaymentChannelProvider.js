@@ -2,7 +2,11 @@ import { debug, info } from 'loglevel';
 import { toBNString } from '../utils/bignumber_helper';
 
 class PaymentChannelProvider {
-    constructor(account, serviceMetadata, ChannelModelProvider) {
+    /**
+     * @param {Account} account
+     * @param {ServiceMetadataProvider} serviceMetadata
+     */
+    constructor(account, serviceMetadata) {
         this.options = serviceMetadata._options;
         this.account = account;
         this.mpeContract = serviceMetadata.mpeContract;

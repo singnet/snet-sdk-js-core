@@ -16,7 +16,7 @@ const DEFAULT_CONFIG = {
 class SnetSDK {
     /**
      * @param {Config} config
-     * @param {MetadataProvider} metadataProvider
+     * @param {IPFSMetadataProvider} metadataProvider
      */
     constructor(config, metadataProvider = undefined) {
         this._config = {
@@ -65,11 +65,6 @@ class SnetSDK {
      */
     get web3() {
         return this._web3;
-    }
-
-    set paymentChannelManagementStrategy(paymentChannelManagementStrategy) {
-        this._paymentChannelManagementStrategy =
-            paymentChannelManagementStrategy;
     }
 
     async _serviceGroup(

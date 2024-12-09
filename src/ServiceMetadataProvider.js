@@ -106,15 +106,12 @@ class ServiceMetadataProvider {
         }
     }
 
-    // TODO is it need to move to Service metadata provider?
     async fetchPaymentMetadata(paymentChannelManagementStrategy) {
         const metadataGenerator = new PaymentMetadataGenerator();
 
         if (!this._options.paidCallMetadataGenerator) {
             const metadata =
                 await paymentChannelManagementStrategy.getPaymentMetadata(this);
-
-            // const metadata = metadataGenerator.generateMetadata(metadataValues);
             return metadata;
         }
 
