@@ -114,16 +114,7 @@ class Account {
      * @type {string}
      */
     async getAddress() {
-        // TODO
         return this._identity.getAddress();
-    }
-
-    /**
-     * @type {string}
-     */
-    async getSignerAddress() {
-        // TODO
-        return this.getAddress();
     }
 
     /**

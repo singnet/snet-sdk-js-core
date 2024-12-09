@@ -99,7 +99,7 @@ class MPEContract {
         );
         const openChannelOperation = this.contract.methods.openChannel;
         try {
-            const signerAddress = await account.getSignerAddress();
+            const signerAddress = await account.getAddress();
             const openChannelFnArgs = [
                 signerAddress,
                 recipientAddress,
@@ -141,7 +141,7 @@ class MPEContract {
 
             const depositAndOpenChannelOperation =
                 this.contract.methods.depositAndOpenChannel;
-            const signerAddress = await account.getSignerAddress();
+            const signerAddress = await account.getAddress();
             const operationArgs = [
                 signerAddress,
                 recipientAddress,
