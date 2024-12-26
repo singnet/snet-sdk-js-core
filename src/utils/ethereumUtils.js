@@ -1,3 +1,3 @@
-export const ethereumMethods = {
-  REQUEST_ACCOUNTS: "eth_requestAccounts",
+export default {
+  REQUEST_ACCOUNTS: 'eth_requestAccounts',
 };
