@@ -7,6 +7,7 @@ export default class IPFSMetadataProvider {
         this._web3 = web3;
         this._networkId = networkId;
         this._ipfsEndpoint = ipfsEndpoint;
+        this._lighthouseEndpoint = "https://gateway.lighthouse.storage/ipfs";
         const registryAddress = RegistryNetworks[this._networkId].address;
         this._registryContract = new this._web3.eth.Contract(
             RegistryAbi,
@@ -73,11 +74,17 @@ export default class IPFSMetadataProvider {
     }
 
     async _fetchMetadataFromIpfs(metadataURI) {
-        let ipfsCID = `${this._web3.utils.hexToUtf8(metadataURI).substring(7)}`;
+        let storageInfo = this._getStorageInfoFromURI(metadataURI);
+        let ipfsCID = storageInfo.uri;
         ipfsCID = ipfsCID.replace(/\0/g, '');
         debug(`Fetching metadata from IPFS[CID: ${ipfsCID}]`);
         try {
-            const fetchUrl = `${this._ipfsEndpoint}/api/v0/cat?arg=${ipfsCID}`;
+            let fetchUrl;
+            if (storageInfo.type === 'ipfs') {
+                fetchUrl = `${this._ipfsEndpoint}/api/v0/cat?arg=${ipfsCID}`;
+            } else {
+                fetchUrl = `${this._lighthouseEndpoint}/${ipfsCID}`;
+            }
             const response = await fetch(fetchUrl);
             if (!response.ok) {
                 throw response.error;
@@ -106,6 +113,17 @@ export default class IPFSMetadataProvider {
         });
 
         return { ...serviceMetadata, groups };
+    }
+
+    _getStorageInfoFromURI(metadataURI) {
+        const decodedUri = this._web3.utils.hexToUtf8(metadataURI);
+        if (decodedUri.startsWith('ipfs://')) {
+            return { type: 'ipfs', uri: decodedUri.substring(7) };
+        } else if (decodedUri.startsWith('filecoin://')) {
+            return { type: 'filecoin', uri: decodedUri.substring(11) };
+        } else {
+            throw new Error('We support only ipfs and filecoin uri in Registry');
+        }
     }
 
     // _constructIpfsClient() {
