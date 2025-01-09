@@ -1,7 +1,7 @@
 import RegistryNetworks from 'singularitynet-platform-contracts/networks/Registry.json';
 import RegistryAbi from 'singularitynet-platform-contracts/abi/Registry.json';
 import { debug } from 'loglevel';
-import { LIGHTHOUSE_ENDPOINT, STORAGE_TYPE_FILECOIN, STORAGE_TYPE_IPFS, STORAGE_URL_FILECOIN_PREFIX, STORAGE_URL_IPFS_PREFIX } from './constants';
+import { LIGHTHOUSE_ENDPOINT, STORAGE_TYPE_FILECOIN, STORAGE_TYPE_IPFS, STORAGE_URL_FILECOIN_PREFIX, STORAGE_URL_IPFS_PREFIX } from './constants/StorageConstants';
 
 export default class IPFSMetadataProvider {
     constructor(web3, networkId, ipfsEndpoint) {
