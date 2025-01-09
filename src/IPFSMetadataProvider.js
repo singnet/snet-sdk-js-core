@@ -1,12 +1,18 @@
 import RegistryNetworks from 'singularitynet-platform-contracts/networks/Registry.json';
 import RegistryAbi from 'singularitynet-platform-contracts/abi/Registry.json';
 import { debug } from 'loglevel';
+import { LIGHTHOUSE_ENDPOINT, STORAGE_TYPE_FILECOIN, STORAGE_TYPE_IPFS, STORAGE_URL_FILECOIN_PREFIX, STORAGE_URL_IPFS_PREFIX } from './constants/StorageConstants';
 
 export default class IPFSMetadataProvider {
     constructor(web3, networkId, ipfsEndpoint) {
         this._web3 = web3;
         this._networkId = networkId;
         this._ipfsEndpoint = ipfsEndpoint;
+        this._lighthouseEndpoint = LIGHTHOUSE_ENDPOINT;
+        this._storageTypeIpfs = STORAGE_TYPE_IPFS;
+        this._storageTypeFilecoin = STORAGE_TYPE_FILECOIN;
+        this._storageUrlIpfsPrefix = STORAGE_URL_IPFS_PREFIX;
+        this._storageUrlFilecoinPrefix = STORAGE_URL_FILECOIN_PREFIX;
         const registryAddress = RegistryNetworks[this._networkId].address;
         this._registryContract = new this._web3.eth.Contract(
             RegistryAbi,
@@ -73,11 +79,17 @@ export default class IPFSMetadataProvider {
     }
 
     async _fetchMetadataFromIpfs(metadataURI) {
-        let ipfsCID = `${this._web3.utils.hexToUtf8(metadataURI).substring(7)}`;
+        let storageInfo = this._getStorageInfoFromURI(metadataURI);
+        let ipfsCID = storageInfo.uri;
         ipfsCID = ipfsCID.replace(/\0/g, '');
         debug(`Fetching metadata from IPFS[CID: ${ipfsCID}]`);
         try {
-            const fetchUrl = `${this._ipfsEndpoint}/api/v0/cat?arg=${ipfsCID}`;
+            let fetchUrl;
+            if (storageInfo.type === this._storageTypeIpfs) {
+                fetchUrl = `${this._ipfsEndpoint}/api/v0/cat?arg=${ipfsCID}`;
+            } else {
+                fetchUrl = `${this._lighthouseEndpoint}/${ipfsCID}`;
+            }
             const response = await fetch(fetchUrl);
             if (!response.ok) {
                 throw response.error;
@@ -106,6 +118,17 @@ export default class IPFSMetadataProvider {
         });
 
         return { ...serviceMetadata, groups };
+    }
+
+    _getStorageInfoFromURI(metadataURI) {
+        const decodedUri = this._web3.utils.hexToUtf8(metadataURI);
+        if (decodedUri.startsWith(STORAGE_URL_IPFS_PREFIX)) {
+            return { type: this._storageTypeIpfs, uri: decodedUri.replace(this._storageUrlIpfsPrefix, "") };
+        } else if (decodedUri.startsWith(STORAGE_URL_FILECOIN_PREFIX)) {
+            return { type: this._storageTypeFilecoin, uri: decodedUri.replace(this._storageUrlFilecoinPrefix, "") };
+        } else {
+            throw new Error(`We support only ${this._storageTypeIpfs} and ${this._storageTypeFilecoin} uri in Registry`);
+        }
     }
 
     // _constructIpfsClient() {
