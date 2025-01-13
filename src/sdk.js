@@ -5,12 +5,13 @@ import Account from './Account';
 import MPEContract from './mpe/MPEContract';
 import IPFSMetadataProvider from './IPFSMetadataProvider';
 import { DefaultPaymentStrategy } from './payment_strategies';
-import { debug, error } from 'loglevel';
+import { debug, error, setLevel } from 'loglevel';
 
 const DEFAULT_CONFIG = {
     defaultGasLimit: 210000,
     defaultGasPrice: 4700000,
     ipfsEndpoint: 'http://ipfs.singularitynet.io:80',
+    logLevel: 'info'
 };
 
 class SnetSDK {
@@ -23,6 +24,7 @@ class SnetSDK {
             ...DEFAULT_CONFIG,
             ...config,
         };
+        setLevel(this._config.logLevel);
         const options = {
             defaultGas: this._config.defaultGasLimit,
             defaultGasPrice: this._config.defaultGasPrice,
