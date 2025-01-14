@@ -1,8 +1,8 @@
 import { PaymentMetadataGenerator } from './utils/metadataUtils';
 import { BigNumber } from 'bignumber.js';
 import { isEmpty } from 'lodash';
-import { debug } from 'loglevel';
 import { toBNString } from './utils/bignumber_helper';
+import { logMessage } from './utils/logger';
 
 class ServiceMetadataProvider {
     constructor(orgId, serviceId, metadata, mpeContract, group, options = {}) {
@@ -115,9 +115,7 @@ class ServiceMetadataProvider {
             return metadata;
         }
 
-        debug('Selecting PaymentChannel using the given strategy', {
-            tags: ['PaypalPaymentMgmtStrategy, gRPC'],
-        });
+        logMessage('debug', 'ServiceMetadataProvider', 'Selecting PaymentChannel using the given strategy');
         try {
             const channel =
                 await paymentChannelManagementStrategy.selectChannel(
@@ -182,9 +180,7 @@ class ServiceMetadataProvider {
             throw new Error('Service endpoints is empty');
         }
         const endpoint = endpoints[0];
-        debug(`Service endpoint: ${endpoint}`, {
-            tags: ['gRPC'],
-        });
+        logMessage('debug', 'ServiceMetadataProvider', `Service endpoint: ${endpoint}`)
 
         return new URL(endpoint);
     }
