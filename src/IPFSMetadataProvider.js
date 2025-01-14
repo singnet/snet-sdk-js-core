@@ -1,6 +1,6 @@
 import RegistryNetworks from 'singularitynet-platform-contracts/networks/Registry.json';
 import RegistryAbi from 'singularitynet-platform-contracts/abi/Registry.json';
-import { debug } from 'loglevel';
+import { logMessage } from './utils/logger';
 
 export default class IPFSMetadataProvider {
     constructor(web3, networkId, ipfsEndpoint) {
@@ -20,9 +20,7 @@ export default class IPFSMetadataProvider {
      * @returns {Promise.<ServiceMetadata>}
      */
     async metadata(orgId, serviceId) {
-        debug(
-            `Fetching service metadata [org: ${orgId} | service: ${serviceId}]`
-        );
+        logMessage('debug', 'MetadataProvider', `Fetching service metadata [org: ${orgId} | service: ${serviceId}]`);
 
         let orgIdBytes = this._web3.utils.fromAscii(orgId);
         orgIdBytes = orgIdBytes.padEnd(66, '0'); // 66 = '0x' + 64 hex characters
@@ -47,7 +45,8 @@ export default class IPFSMetadataProvider {
     }
 
     async _fetchOrgMetadata(orgIdBytes) {
-        debug('Fetching org metadata URI from registry contract');
+        logMessage('debug', 'MetadataProvider', 'Fetching org metadata URI from registry contract');
+
         try {
             const { orgMetadataURI } = await this._registryContract.methods
                 .getOrganizationById(orgIdBytes)
@@ -60,7 +59,8 @@ export default class IPFSMetadataProvider {
     }
 
     async _fetchServiceMetadata(orgIdBytes, serviceIdBytes) {
-        debug('Fetching service metadata URI from registry contract');
+        logMessage('debug', 'MetadataProvider', 'Fetching service metadata URI from registry contract');
+
         try {
             const { metadataURI: serviceMetadataURI } =
                 await this._registryContract.methods
@@ -75,7 +75,8 @@ export default class IPFSMetadataProvider {
     async _fetchMetadataFromIpfs(metadataURI) {
         let ipfsCID = `${this._web3.utils.hexToUtf8(metadataURI).substring(7)}`;
         ipfsCID = ipfsCID.replace(/\0/g, '');
-        debug(`Fetching metadata from IPFS[CID: ${ipfsCID}]`);
+        logMessage('debug', 'MetadataProvider', `Fetching metadata from IPFS[CID: ${ipfsCID}]`);
+
         try {
             const fetchUrl = `${this._ipfsEndpoint}/api/v0/cat?arg=${ipfsCID}`;
             const response = await fetch(fetchUrl);
@@ -84,7 +85,7 @@ export default class IPFSMetadataProvider {
             }
             return response.json();
         } catch (error) {
-            debug(`Error fetching metadata from IPFS[CID: ${ipfsCID}]`);
+            logMessage('error', 'MetadataProvider', `Error fetching metadata from IPFS[CID: ${ipfsCID}]`);
             throw error;
         }
     }
