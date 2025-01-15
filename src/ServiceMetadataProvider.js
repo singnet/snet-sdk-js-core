@@ -29,7 +29,7 @@ class ServiceMetadataProvider {
     }
 
     get concurrencyManager() {
-        error('concurrencyManager must be implemented in the sub classes');
+        logMessage('error', 'ServiceMetadataProvider', 'concurrencyManager must be implemented in the sub classes');
         return undefined;
     }
 
