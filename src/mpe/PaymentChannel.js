@@ -1,6 +1,4 @@
 import BigNumber from 'bignumber.js';
-
-// import { log as logger } from 'loglevel';
 import { toBNString, uint8ArrayToBN } from '../utils/bignumber_helper';
 import PaymentChannelProvider from './PaymentChannelProvider';
 import { logMessage } from '../utils/logger';
