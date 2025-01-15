@@ -131,10 +131,7 @@ class ServiceMetadataProvider {
             const channelIdStr = toBNString(channelId);
             const nonceStr = toBNString(nonce);
             const signingAmountStr = toBNString(signingAmount);
-            info(
-                `Using PaymentChannel[id: ${channelIdStr}] with nonce: ${nonceStr} and amount: ${signingAmountStr} and `,
-                { tags: ['PaymentChannelManagementStrategy', 'gRPC'] }
-            );
+            logMessage('info', 'ServiceMetadataProvider', `Using PaymentChannel[id: ${channelIdStr}] with nonce: ${nonceStr} and amount: ${signingAmountStr}`)
             const { signatureBytes } =
                 await this.serviceClient._options.paidCallMetadataGenerator(
                     channelId,
