@@ -1,7 +1,7 @@
 import AGITokenAbi from 'singularitynet-token-contracts/abi/SingularityNetToken';
 import AGITokenNetworks from 'singularitynet-token-contracts/networks/SingularityNetToken';
 import { toBNString } from './utils/bignumber_helper';
-import { logMessage } from './utils/logger';
+import { logMessage, stringifyWithBigInt } from './utils/logger';
 
 class Account {
     /**
@@ -122,7 +122,7 @@ class Account {
      */
     async signData(...data) {
         try {
-            logMessage('info', 'Account', `signing message: ${data}`);
+            logMessage('info', 'Account', `signing message: ${stringifyWithBigInt(data)}`);
             const sha3Message = this._web3.utils.soliditySha3(...data);
             const signature = await this._identity.signData(sha3Message);
             const stripped = signature.substring(2, signature.length);
