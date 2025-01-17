@@ -32,19 +32,15 @@ export const stringifyWithBigInt = (data) => {
  * @param {string} message - The log message.
  */
 export const logMessage = (level, moduleName, message) => {
-    const formattedMessage = formatLogMessage(level, moduleName, message);
+    const validLevels = {
+        debug: debug,
+        info: info,
+        error: error,
+    };
 
-    switch (level) {
-        case 'debug':
-            debug(formattedMessage);
-            break;
-        case 'info':
-            info(formattedMessage);
-            break;
-        case 'error':
-            error(formattedMessage);
-            break;
-        default:
-            info(formattedMessage);
-    }
+    const effectiveLevel = validLevels[level] ? level : 'info';
+    const formattedMessage = formatLogMessage(effectiveLevel, moduleName, message);
+
+    validLevels[effectiveLevel](formattedMessage);
 };
+
