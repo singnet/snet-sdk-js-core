@@ -1,4 +1,4 @@
-import { debug } from 'loglevel';
+import { logMessage } from '../utils/logger';
 
 const MODELS_STATUS = {
     0: 'CREATED',
@@ -195,7 +195,7 @@ class TrainingProvider {
         const request = await this._trainingCreateModel(address, params);
         return new Promise((resolve, reject) => {
             this._modelServiceClient.create_model(request, (err, response) => {
-                debug(`create model ${err} ${response}`);
+                logMessage('debug', 'TrainingProvider', `create model ${err} ${response}`)
                 if (err) {
                     reject(err);
                 } else {
@@ -264,7 +264,7 @@ class TrainingProvider {
         const request = await this._trainingDeleteModel(params);
         return new Promise((resolve, reject) => {
             this._modelServiceClient.delete_model(request, (err, response) => {
-                debug(`delete model ${err} ${response}`);
+                logMessage('debug', 'TrainingProvider', `delete model ${err} ${response}`)
                 if (err) {
                     reject(err);
                 } else {
@@ -314,7 +314,7 @@ class TrainingProvider {
             this._modelServiceClient.update_model_access(
                 request,
                 (err, response) => {
-                    debug(`update model ${err} ${response}`);
+                    logMessage('debug', 'TrainingProvider', `update model ${err} ${response}`)
                     if (err) {
                         reject(err);
                     } else {

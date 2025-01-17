@@ -1,8 +1,8 @@
 import { PaymentMetadataGenerator } from './utils/metadataUtils';
 import { BigNumber } from 'bignumber.js';
 import { isEmpty } from 'lodash';
-import { debug } from 'loglevel';
 import { toBNString } from './utils/bignumber_helper';
+import { logMessage } from './utils/logger';
 
 class ServiceMetadataProvider {
     constructor(orgId, serviceId, metadata, mpeContract, group, options = {}) {
@@ -29,7 +29,7 @@ class ServiceMetadataProvider {
     }
 
     get concurrencyManager() {
-        error('concurrencyManager must be implemented in the sub classes');
+        logMessage('error', 'ServiceMetadataProvider', 'concurrencyManager must be implemented in the sub classes');
         return undefined;
     }
 
@@ -115,9 +115,7 @@ class ServiceMetadataProvider {
             return metadata;
         }
 
-        debug('Selecting PaymentChannel using the given strategy', {
-            tags: ['PaypalPaymentMgmtStrategy, gRPC'],
-        });
+        logMessage('debug', 'ServiceMetadataProvider', 'Selecting PaymentChannel using the given strategy');
         try {
             const channel =
                 await paymentChannelManagementStrategy.selectChannel(
@@ -133,10 +131,7 @@ class ServiceMetadataProvider {
             const channelIdStr = toBNString(channelId);
             const nonceStr = toBNString(nonce);
             const signingAmountStr = toBNString(signingAmount);
-            info(
-                `Using PaymentChannel[id: ${channelIdStr}] with nonce: ${nonceStr} and amount: ${signingAmountStr} and `,
-                { tags: ['PaymentChannelManagementStrategy', 'gRPC'] }
-            );
+            logMessage('info', 'ServiceMetadataProvider', `Using PaymentChannel[id: ${channelIdStr}] with nonce: ${nonceStr} and amount: ${signingAmountStr}`)
             const { signatureBytes } =
                 await this.serviceClient._options.paidCallMetadataGenerator(
                     channelId,
@@ -182,9 +177,7 @@ class ServiceMetadataProvider {
             throw new Error('Service endpoints is empty');
         }
         const endpoint = endpoints[0];
-        debug(`Service endpoint: ${endpoint}`, {
-            tags: ['gRPC'],
-        });
+        logMessage('debug', 'ServiceMetadataProvider', `Service endpoint: ${endpoint}`)
 
         return new URL(endpoint);
     }

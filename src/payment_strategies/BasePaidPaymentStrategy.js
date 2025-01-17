@@ -1,5 +1,5 @@
-import { error } from 'loglevel';
 import PaymentChannelProvider from '../mpe/PaymentChannelProvider';
+import { logMessage } from '../utils/logger';
 
 class BasePaidPaymentStrategy {
     /**
@@ -93,7 +93,7 @@ class BasePaidPaymentStrategy {
     }
 
     _getPrice() {
-        error('_getPrice must be implemented in the sub classes');
+        logMessage('error', 'BasePaidPaymentStrategy', '_getPrice must be implemented in the sub classes')
     }
 
     /**

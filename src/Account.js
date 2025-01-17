@@ -1,7 +1,7 @@
 import AGITokenAbi from 'singularitynet-token-contracts/abi/SingularityNetToken';
 import AGITokenNetworks from 'singularitynet-token-contracts/networks/SingularityNetToken';
-import { debug, info } from 'loglevel';
 import { toBNString } from './utils/bignumber_helper';
+import { logMessage, stringifyWithBigInt } from './utils/logger';
 
 class Account {
     /**
@@ -24,7 +24,7 @@ class Account {
      */
     async balance() {
         try {
-            debug('Fetching account balance', { tags: ['Account'] });
+            logMessage('debug', 'Account', 'Fetching account balance');
             const address = await this.getAddress();
             return this.tokenContract.methods.balanceOf(address).call();
         } catch (error) {
@@ -71,9 +71,7 @@ class Account {
      */
     async approveTransfer(amountInCogs) {
         const amount = toBNString(amountInCogs);
-        info(`Approving ${amount}cogs transfer to MPE address`, {
-            tags: ['Account'],
-        });
+        logMessage('info', 'Account', `Approving ${amount}cogs transfer to MPE address`);
         const approveOperation = this.tokenContract.methods.approve;
         return this.sendTransaction(
             this.tokenAddress,
@@ -89,9 +87,7 @@ class Account {
      */
     async allowance() {
         try {
-            debug('Fetching already approved allowance', {
-                tags: ['Account'],
-            });
+            logMessage('debug', 'Account', 'Fetching already approved allowance');
             const address = await this.getAddress();
             return this.tokenContract.methods
                 .allowance(address, this._mpeContract.address)
@@ -126,7 +122,7 @@ class Account {
      */
     async signData(...data) {
         try {
-            info(`signing message: ${data}`);
+            logMessage('info', 'Account', `signing message: ${stringifyWithBigInt(data)}`);
             const sha3Message = this._web3.utils.soliditySha3(...data);
             const signature = await this._identity.signData(sha3Message);
             const stripped = signature.substring(2, signature.length);
