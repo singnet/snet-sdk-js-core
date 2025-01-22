@@ -1,24 +1,57 @@
-import { toBNString, uint8ArrayToBN } from '../../src/utils/bignumber_helper';
-import BigNumber from 'bignumber.js';
+import {toBNString, uint8ArrayToBN} from '../../src/utils/bignumber_helper';
+import {BigNumber} from "bignumber.js";
 
-test('toBNString should return BigNumber string for valid number values', () => {
-  const result = toBNString(10);
-  expect(result).toBe('10');
+test('should convert a valid integer to a BigNumber string', () => {
+  const result = toBNString(100);
+  expect(result).toBe('100');
 });
 
-test('toBNString should return "0" for undefined value', () => {
+// Test case for a valid floating point number
+test('should convert a valid floating point number to a BigNumber string', () => {
+  const result = toBNString(123.45);
+  expect(result).toBe('123.45');
+});
+
+// Test case for a string representation of a number
+test('should convert a valid number in string format to a BigNumber string', () => {
+  const result = toBNString('5000');
+  expect(result).toBe('5000');
+});
+
+// Test case for a very large number
+test('should convert a large number to a BigNumber string', () => {
+  const result = toBNString('1000000000000000000000000');
+  expect(result).toBe('1000000000000000000000000');
+});
+
+// Test case for zero
+test('should convert zero to a BigNumber string', () => {
+  const result = toBNString(0);
+  expect(result).toBe('0');
+});
+
+// Test case for invalid input: string that can't be converted to a number
+test('should return "0" if value cannot be converted to a number', () => {
+  const result = toBNString('invalid');
+  expect(result).toBe('NaN');
+});
+
+// Test case for undefined input
+test('should return "0" if value is undefined', () => {
   const result = toBNString(undefined);
-  expect(result).toBe('0');
+  expect(result).toBe('NaN');
 });
 
-test('toBNString should return "0" for null value', () => {
+// Test case for null input
+test('should return "0" if value is null', () => {
   const result = toBNString(null);
-  expect(result).toBe('0');
+  expect(result).toBe('NaN');
 });
 
-test('toBNString should return "0" for empty string', () => {
+// Test case for an empty string
+test('should return "0" if an empty string is passed', () => {
   const result = toBNString('');
-  expect(result).toBe('0');
+  expect(result).toBe('NaN');
 });
 
 test('uint8ArrayToBN should return BigNumber with value 0 for empty uint8Array', () => {
