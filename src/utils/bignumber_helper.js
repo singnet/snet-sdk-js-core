@@ -3,7 +3,8 @@ import { isEmpty } from 'lodash';
 
 export function toBNString(value) {
     if (value !== 0 && !Number(value)) {
-        return "0"
+        // throw new TypeError("value can't be converted to number");
+        new BigNumber(0);
     }
 
     return new BigNumber(value).toFixed();
