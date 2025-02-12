@@ -1,5 +1,5 @@
-import AGITokenAbi from 'singularitynet-token-contracts/abi/SingularityNetToken';
-import AGITokenNetworks from 'singularitynet-token-contracts/networks/SingularityNetToken';
+import AGITokenAbi from 'singularitynet-token-contracts/abi/SingularityNetToken.json';
+import AGITokenNetworks from 'singularitynet-token-contracts/networks/SingularityNetToken.json';
 import { debug, info } from 'loglevel';
 import { toBNString } from './utils/bignumber_helper';
 

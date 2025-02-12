@@ -50,9 +50,9 @@ class PaidCallPaymentStrategy extends BasePaidPaymentStrategy {
      * @private
      */
     async _generateSignature(channelId, nonce, amount) {
-        return this.account.signData(
+        return this._account.signData(
             { t: 'string', v: '__MPE_claim_message' },
-            { t: 'address', v: this.serviceMetadata.mpeContract.address },
+            { t: 'address', v: this._serviceMetadata.mpeContract.address },
             { t: 'uint256', v: channelId },
             { t: 'uint256', v: nonce },
             { t: 'uint256', v: amount }
@@ -65,7 +65,7 @@ class PaidCallPaymentStrategy extends BasePaidPaymentStrategy {
      * @private
      */
     _getPrice() {
-        return this.serviceMetadata.pricePerServiceCall.toNumber();
+        return this._serviceMetadata.pricePerServiceCall.toNumber();
     }
 }
 
