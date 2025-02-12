@@ -1,9 +1,7 @@
 import BigNumber from 'bignumber.js';
-
-// import { log as logger } from 'loglevel';
 import { toBNString, uint8ArrayToBN } from '../utils/bignumber_helper';
 import PaymentChannelProvider from './PaymentChannelProvider';
-import { debug, error } from 'loglevel';
+import { logMessage } from '../utils/logger';
 
 class PaymentChannel {
     /**
@@ -96,9 +94,7 @@ class PaymentChannel {
      * @returns {Promise<PaymentChannel>}
      */
     async syncState() {
-        debug(`Syncing PaymentChannel[id: ${this._channelId}] state`, {
-            tags: ['PaymentChannel'],
-        });
+        logMessage('debug', 'PaymentChannel', `Syncing PaymentChannel[id: ${this._channelId}] state`)
         // try {
         const latestChannelInfoOnBlockchain = await this._mpeContract.channels(
             this._channelId
@@ -135,10 +131,7 @@ class PaymentChannel {
     async _currentChannelState() {
         console.log('_currentChannelState start');
 
-        debug(
-            `Fetching latest PaymentChannel[id: ${this._channelId}] state from service daemon`,
-            { tags: ['PaymentChannel'] }
-        );
+        logMessage('debug', 'PaymentChannel', `Fetching latest PaymentChannel[id: ${this._channelId}] state from service daemon`);
         try {
             const paymentChannelProvider = new PaymentChannelProvider(
                 this._account,
@@ -159,10 +152,7 @@ class PaymentChannel {
             };
             return Promise.resolve(channelState);
         } catch (err) {
-            error(
-                `Failed to fetch latest PaymentChannel[id: ${this._channelId}] state from service daemon. ${err.message}`,
-                { tags: ['PaymentChannel'] }
-            );
+            logMessage('error', 'PaymentChannel', `Failed to fetch latest PaymentChannel[id: ${this._channelId}] state from service daemon. ${err.message}`);
             return Promise.reject(err);
         } finally {
             console.log('_currentChannelState end');

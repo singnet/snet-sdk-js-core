@@ -3,7 +3,7 @@ import MPENetworks from 'singularitynet-platform-contracts/networks/MultiPartyEs
 import Web3 from 'web3';
 import PaymentChannel from './PaymentChannel';
 import { toBNString } from '../utils/bignumber_helper';
-import { info, debug } from 'loglevel';
+import { logMessage } from '../utils/logger';
 
 class MPEContract {
     /**
@@ -93,10 +93,7 @@ class MPEContract {
             group_id_in_bytes: groupId,
         } = group;
 
-        info(
-            `Opening new payment channel [amount: ${amount}, expiry: ${expiryStr}]`,
-            { tags: ['MPE'] }
-        );
+        logMessage('info', 'MPEContract', `Opening new payment channel [amount: ${amount}, expiry: ${expiryStr}]`);
         const openChannelOperation = this.contract.methods.openChannel;
         try {
             const signerAddress = await account.getAddress();
@@ -314,10 +311,7 @@ class MPEContract {
                     MPENetworks[this._networkId].address
                 );
             }
-            debug(
-                `Fetching all payment channel open events starting at block: ${fromBlock}`,
-                { tags: ['MPE'] }
-            );
+            logMessage('debug', 'MPEContract', `Fetching all payment channel open events starting at block: ${fromBlock}`);
 
             const address = await account.getAddress();
             const decodedData = Buffer.from(group.group_id, 'base64').toString(
