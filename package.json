@@ -1,5 +1,5 @@
 {
-  "name": "test-snet-sdk-core",
+  "name": "snet-sdk-core",
   "version": "0.1.0",
   "description": "SingularityNET core SDK for JS",
   "keywords": [
