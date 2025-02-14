@@ -66,7 +66,7 @@ class ServiceMetadataProvider {
             serviceId: this._metadata.serviceId,
             groupId: this._group.group_id,
             groupIdInBytes: this._group.group_id_in_bytes,
-            daemonEndpoint: this.getServiceEndpoint(),
+            daemonEndpoint: this._getServiceEndpoint(),
         };
     }
 
@@ -87,7 +87,7 @@ class ServiceMetadataProvider {
         return {
             email: this._options.email,
             tokenToMakeFreeCall: this._options.tokenToMakeFreeCall,
-            tokenExpiryDateBlock: this._options.tokenExpirationBlock,
+            tokenExpiryDateBlock: this._options.tokenExpiryDateBlock,
         };
     }
 
@@ -145,15 +145,14 @@ class ServiceMetadataProvider {
                 channelAmount: signingAmount,
                 signatureBytes: signatureBytes,
             };
-            const metadata = metadataGenerator.generateMetadata(metadataValues);
-            return metadata;
+            return metadataGenerator.generateMetadata(metadataValues);
         } catch (error) {
             throw new Error('fathing payment metada error: ', error);
         }
     }
 
     enhanceGroupInfo(group) {
-        if (isEmpty(group)) {
+        if(isEmpty(group)) {
             return group;
         }
 
@@ -167,7 +166,7 @@ class ServiceMetadataProvider {
         };
     }
 
-    getServiceEndpoint() {
+    _getServiceEndpoint() {
         if (this._options.endpoint) {
             return new URL(this._options.endpoint);
         }
