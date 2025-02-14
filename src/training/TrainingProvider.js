@@ -14,22 +14,23 @@ class TrainingProvider {
             this.TrainingModelProvider?._generateModelServiceClient(
                 serviceEndpoint
             );
+        this._unifiedSigns = {};
     }
 
     async _getUnifiedSign(address, message) {
         const keyOfUnofiedSign = address + message;
-        const blockNumber = await this._web3.eth.getBlockNumber();
+        const blockNumber = await this.account.getCurrentBlockNumber();
         if(
-            this.unifiedSigns[keyOfUnofiedSign] &&
-            blockNumber - this.unifiedSigns[keyOfUnofiedSign]?.currentBlockNumber <= UNIFIED_SIGN_EXPIRY
+            this._unifiedSigns[keyOfUnofiedSign] &&
+            blockNumber - this._unifiedSigns[keyOfUnofiedSign]?.currentBlockNumber <= UNIFIED_SIGN_EXPIRY
         ) {
-          return this.unifiedSigns[keyOfUnofiedSign];
+          return this._unifiedSigns[keyOfUnofiedSign];
         }
         const {
           currentBlockNumber,
           signatureBytes
         } = await this._requestSignForModel(address, message);
-        this.unifiedSigns[keyOfUnofiedSign] = {
+        this._unifiedSigns[keyOfUnofiedSign] = {
           currentBlockNumber,
           signatureBytes
         };
@@ -53,9 +54,9 @@ class TrainingProvider {
   
       async getMethodMetadata(params) {
           const request = this._methodMetadataRequest(params);
-  
+          
           return new Promise((resolve, reject) => {
-            this._trainingServiceClient.get_method_metadata(request, (err, response) => {
+            this._modelServiceClient.get_method_metadata(request, (err, response) => {
               if(err) {
                 logMessage('debug', 'TrainingProvider', `get_method_metadata ${err} ${response}`);
                 reject(err);
@@ -93,36 +94,13 @@ class TrainingProvider {
       async getServiceMetadata() {
         const request = this._trainingMetadataRequest();
         return new Promise((resolve, reject) => {
-          this._trainingServiceClient.get_training_metadata(request, (err, response) => {
+          this._modelServiceClient.get_training_metadata(request, (err, response) => {
             if(err) {
                 logMessage('debug', 'TrainingProvider', `get_training_metadata ${err} ${response}`);
                 reject(err);
             } else {
-              const trainingmethodsMap = response.getTrainingmethodsMap().map_;
-              const methodsMapKeys = Object.keys(trainingmethodsMap);
-              const trainingServicesAndMethods = {};
-  
-              methodsMapKeys.forEach(methodsMapKey => {
-                  let trainingMethods = [];
-                  trainingmethodsMap[methodsMapKey].value.map(methodsArray => 
-                      methodsArray.forEach(methods => 
-                          methods.forEach(method => {
-                              if(String(method)) {
-                              trainingMethods.push(method);
-                              }
-                          })
-                      )
-                  );
-                  trainingServicesAndMethods[methodsMapKey] = trainingMethods;
-              });
-  
-              const isTrainingEnabled = response.getTrainingenabled();
-              const hasTrainingInProto = response.getTraininginproto();
-              resolve({
-                isTrainingEnabled,
-                hasTrainingInProto,
-                trainingServicesAndMethods
-              });
+              const parsedResponse = response.toObject();
+              resolve(parsedResponse);
             }
           });
         });
@@ -137,7 +115,7 @@ class TrainingProvider {
       async getAllModels(params) {
         const request = await this._trainingStateRequest(params);
         return new Promise((resolve, reject) => {
-          this._trainingServiceClient.get_all_models(request, (err, response) => {
+          this._modelServiceClient.get_all_models(request, (err, response) => {
             if(err) {
                 logMessage('debug', 'TrainingProvider', `get_all_models ${err} ${response}`);
               reject(err);
@@ -170,7 +148,7 @@ class TrainingProvider {
           const request = await this._trainingGetModelStateRequest(params);
     
             return new Promise((resolve, reject) => {
-                this._trainingServiceClient.get_model(request, (err, response) => {
+                this._modelServiceClient.get_model(request, (err, response) => {
                         if(err) {
                             logMessage('debug', 'TrainingProvider', `get_model ${err} ${response}`);
                             reject(err);
@@ -187,7 +165,7 @@ class TrainingProvider {
         const request = await this._trainingGetModelStateRequest(params);
   
           return new Promise((resolve, reject) => {
-              this._trainingServiceClient.get_model( request, (err, response) => {
+              this._modelServiceClient.get_model( request, (err, response) => {
                       if(err) {
                         logMessage('debug', 'TrainingProvider', `get_model_status ${err} ${response}`);
                           reject(err);
@@ -221,7 +199,7 @@ class TrainingProvider {
       async getTrainModelPrice(params) {
           const request = await this._trainModelPriceRequest(params);
           return new Promise((resolve, reject) => {
-            this._trainingServiceClient.train_model_price(request, (err, response) => {
+            this._modelServiceClient.train_model_price(request, (err, response) => {
               if(err) {
                 logMessage('debug', 'TrainingProvider', `train_model_price ${err} ${response}`);
                 reject(err);
@@ -251,12 +229,12 @@ class TrainingProvider {
       }
   
       async trainModel(params) {
-          const request = await this._trainModelRequest(params);
           const amount = await this.getTrainModelPrice(params);
+          const request = await this._trainModelRequest(params);
           const paymentMetadata = await this._generateTrainingPaymentMetadata(params.modelId, amount);
   
           return new Promise((resolve, reject) => {
-            this._trainingServiceClient.train_model(request, paymentMetadata, (err, response) => {
+            this._modelServiceClient.train_model(request, paymentMetadata, (err, response) => {
               if(err) {
                 logMessage('debug', 'TrainingProvider', `train_model ${err} ${response}`);
                 reject(err);
@@ -290,7 +268,7 @@ class TrainingProvider {
       async getValidateModelPrice(params) {
         const request = await this._validateModelPriceRequest(params);
         return new Promise((resolve, reject) => {
-          this._trainingServiceClient.validate_model_price(request, (err, response) => {
+          this._modelServiceClient.validate_model_price(request, (err, response) => {
             if(err) {
                 logMessage('debug', 'TrainingProvider', `validate_model_price ${err} ${response}`);
               reject(err);
@@ -322,13 +300,12 @@ class TrainingProvider {
       }
   
       async validateModel(params) {
-        const request = await this._validateModelRequest(params);
-  
         const amount = await this.getValidateModelPrice(params);
+        const request = await this._validateModelRequest(params);
         const paymentMetadata = await this._generateTrainingPaymentMetadata(params.modelId, amount);
   
         return new Promise((resolve, reject) => {
-          this._trainingServiceClient.validate_model(request, paymentMetadata, (err, response) => {
+          this._modelServiceClient.validate_model(request, paymentMetadata, (err, response) => {
             if(err) {
                 logMessage('debug', 'TrainingProvider', `validate_model ${err} ${response}`);
               reject(err);
@@ -384,7 +361,7 @@ class TrainingProvider {
       }
   
       async _requestSignForModel(address, message) {
-        const currentBlockNumber = await this._web3.eth.getBlockNumber();
+        const currentBlockNumber = await this.account.getCurrentBlockNumber();
         const signatureBytes = await this.account.signData(
           { t: 'string', v: message }, 
           { t: 'address', v: address },
@@ -399,7 +376,7 @@ class TrainingProvider {
       async createModel(params) {
         const request = await this._trainingCreateModel(params);
         return new Promise((resolve, reject) => {
-          this._trainingServiceClient.create_model(request, (err, response) => {
+          this._modelServiceClient.create_model(request, (err, response) => {
             logMessage('debug', 'TrainingProvider', `create model ${err} ${response}`);
             if(err) {
               reject(err);
@@ -450,7 +427,7 @@ class TrainingProvider {
       async deleteModel(params) {
         const request = await this._trainingDeleteModel(params);
         return new Promise((resolve, reject) => {
-          this._trainingServiceClient.delete_model(request, (err, response) => {
+          this._modelServiceClient.delete_model(request, (err, response) => {
             logMessage('debug', 'TrainingProvider', `delete model ${err} ${response}`);
             if(err) {
               reject(err);
@@ -482,7 +459,7 @@ class TrainingProvider {
       async updateModel(params) {
         const request = await this._trainingUpdateModel(params);
         return new Promise((resolve, reject) => {
-          this._trainingServiceClient.update_model(request, (err, response) => {
+          this._modelServiceClient.update_model(request, (err, response) => {
             logMessage('debug', 'TrainingProvider', `update model ${err} ${response}`);
             if(err) {
               reject(err);
@@ -513,7 +490,12 @@ class TrainingProvider {
         modelStateRequest.addAddressList(params.addressList);
   
         return modelStateRequest;
-      }  
+      }
+
+      _generateTrainingPaymentMetadata() {
+        logger.error('_generateTrainingPaymentMetadata must be implemented in the sub classes');
+      }
+
 }
 
 export default TrainingProvider;
