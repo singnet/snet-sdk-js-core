@@ -18,19 +18,20 @@ class TrainingProvider {
     }
 
     async _getUnifiedSign(address, message) {
-        const keyOfUnofiedSign = address + message;
+        const keyOfUnifiedSign = address + message;
         const blockNumber = await this.account.getCurrentBlockNumber();
-        if(
-            this._unifiedSigns[keyOfUnofiedSign] &&
-            blockNumber - this._unifiedSigns[keyOfUnofiedSign]?.currentBlockNumber <= UNIFIED_SIGN_EXPIRY
+        
+        if (
+            this._unifiedSigns[keyOfUnifiedSign] &&
+            blockNumber - this._unifiedSigns[keyOfUnifiedSign].currentBlockNumber <= UNIFIED_SIGN_EXPIRY
         ) {
-          return this._unifiedSigns[keyOfUnofiedSign];
+          return this._unifiedSigns[keyOfUnifiedSign];
         }
         const {
           currentBlockNumber,
           signatureBytes
         } = await this._requestSignForModel(address, message);
-        this._unifiedSigns[keyOfUnofiedSign] = {
+        this._unifiedSigns[keyOfUnifiedSign] = {
           currentBlockNumber,
           signatureBytes
         };
@@ -52,59 +53,59 @@ class TrainingProvider {
         return authorizationRequest;
     }
   
-      async getMethodMetadata(params) {
-          const request = this._methodMetadataRequest(params);
-          
-          return new Promise((resolve, reject) => {
-            this._modelServiceClient.get_method_metadata(request, (err, response) => {
-              if(err) {
-                logMessage('debug', 'TrainingProvider', `get_method_metadata ${err} ${response}`);
-                reject(err);
-              } else {
-                  const methodMetadata = {
-                      defaultModelId: response.getDefaultModelId(),
-                      maxModelsPerUser: response.getMaxModelsPerUser(),
-                      datasetMaxSizeMb: response.getDatasetMaxSizeMb(),
-                      datasetMaxCountFiles: response.getDatasetMaxCountFiles(),
-                      datasetMaxSizeSingleFileMb: response.getDatasetMaxSizeSingleFileMb(),
-                      datasetFilesType: response.getDatasetFilesType(),
-                      datasetType: response.getDatasetType(),
-                      datasetDescription: response.getDatasetDescription(),
-                  };
-                  resolve(methodMetadata);
-              }
-            });
-          });
-      }
-  
-      _methodMetadataRequest(params) {
-          const ModelStateRequest = this.TrainingModelProvider._getMethodMetadataRequestMethodDescriptor();
-          const modelStateRequest = new ModelStateRequest();
-  
-          if(params?.modelId) {
-              modelStateRequest.setModelId(params.modelId);
-              return modelStateRequest;
-          }
-          modelStateRequest.setGrpcMethodName(params.grpcMethod);
-          modelStateRequest.setGrpcServiceName(params.serviceName);
-  
-          return modelStateRequest;
-      }
-  
-      async getServiceMetadata() {
-        const request = this._trainingMetadataRequest();
+    async getMethodMetadata(params) {
+        const request = this._methodMetadataRequest(params);
+        
         return new Promise((resolve, reject) => {
-          this._modelServiceClient.get_training_metadata(request, (err, response) => {
+          this._modelServiceClient.get_method_metadata(request, (err, response) => {
             if(err) {
-                logMessage('debug', 'TrainingProvider', `get_training_metadata ${err} ${response}`);
-                reject(err);
+              logMessage('debug', 'TrainingProvider', `get_method_metadata ${err} ${response}`);
+              reject(err);
             } else {
-              const parsedResponse = response.toObject();
-              resolve(parsedResponse);
+                const methodMetadata = {
+                    defaultModelId: response.getDefaultModelId(),
+                    maxModelsPerUser: response.getMaxModelsPerUser(),
+                    datasetMaxSizeMb: response.getDatasetMaxSizeMb(),
+                    datasetMaxCountFiles: response.getDatasetMaxCountFiles(),
+                    datasetMaxSizeSingleFileMb: response.getDatasetMaxSizeSingleFileMb(),
+                    datasetFilesType: response.getDatasetFilesType(),
+                    datasetType: response.getDatasetType(),
+                    datasetDescription: response.getDatasetDescription(),
+                };
+                resolve(methodMetadata);
             }
           });
         });
-      }
+    }
+
+    _methodMetadataRequest(params) {
+        const ModelStateRequest = this.TrainingModelProvider._getMethodMetadataRequestMethodDescriptor();
+        const modelStateRequest = new ModelStateRequest();
+
+        if(params?.modelId) {
+            modelStateRequest.setModelId(params.modelId);
+            return modelStateRequest;
+        }
+        modelStateRequest.setGrpcMethodName(params.grpcMethod);
+        modelStateRequest.setGrpcServiceName(params.serviceName);
+
+        return modelStateRequest;
+    }
+
+    async getServiceMetadata() {
+      const request = this._trainingMetadataRequest();
+      return new Promise((resolve, reject) => {
+        this._modelServiceClient.get_training_metadata(request, (err, response) => {
+          if(err) {
+              logMessage('debug', 'TrainingProvider', `get_training_metadata ${err} ${response}`);
+              reject(err);
+          } else {
+            const parsedResponse = response.toObject();
+            resolve(parsedResponse);
+          }
+        });
+      });
+    }
   
       _trainingMetadataRequest() {
         const ModelStateRequest = this.TrainingModelProvider._getTrainingMetadataRequestMethodDescriptor();
@@ -340,7 +341,7 @@ class TrainingProvider {
         const {
           currentBlockNumber,
           signatureBytes
-        } = await this._requestSignForModel(params.address, message);
+        } = await this._getUnifiedSign(params.address, message);
         const ModelStateRequest = this.TrainingModelProvider._getAllModelRequestMethodDescriptor();
         const modelStateRequest = new ModelStateRequest();
         
