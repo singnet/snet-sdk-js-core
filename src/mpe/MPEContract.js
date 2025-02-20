@@ -354,9 +354,9 @@ class MPEContract {
             const address = await account.getAddress();
             let currentEscrowBalance = await this.balance(address);
             currentEscrowBalance = new BigNumber(currentEscrowBalance);
-            amountInCogs = new BigNumber(amountInCogs);
-            if(amountInCogs.isGreaterThan(currentEscrowBalance)) {
-                await account.depositToEscrowAccount(amountInCogs.minus(currentEscrowBalance));
+            const amountInCogsBN = new BigNumber(amountInCogs);
+            if (amountInCogsBN.isGreaterThan(currentEscrowBalance)) {
+                await account.depositToEscrowAccount(amountInCogsBN.minus(currentEscrowBalance));
             }
         } catch (error) {
             throw new Error('funding escrow account error: ', error);
