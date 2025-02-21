@@ -83,7 +83,6 @@ class PaymentChannelProvider {
      */
     async getChannelState(channelId) {
         const channelStateRequest = await this._channelStateRequest(channelId);
-        console.log('this.ChannelModelProvider: ', this.ChannelModelProvider);
 
         return new Promise((resolve, reject) => {
             const paymentChannelStateServiceClient =
@@ -106,7 +105,7 @@ class PaymentChannelProvider {
      * @returns {Promise.<PaymentChannel[]>}
      */
     async loadOpenChannels() {
-        const currentBlockNumber = await this.account.getCurrentBlockNumber();
+        this.lastReadBlock = await this.account.getCurrentBlockNumber();
         const newPaymentChannels = await this.mpeContract.getPastOpenChannels(
             this.account,
             this.serviceMetadata,
@@ -118,7 +117,6 @@ class PaymentChannelProvider {
             { tags: ['PaymentChannel'] }
         );
         this.paymentChannels = [...this.paymentChannels, ...newPaymentChannels];
-        this.lastReadBlock = currentBlockNumber;
         return this.paymentChannels;
     }
 

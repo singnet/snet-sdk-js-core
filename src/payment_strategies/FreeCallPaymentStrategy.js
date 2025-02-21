@@ -106,8 +106,10 @@ class FreeCallPaymentStrategy {
             this._serviceMetadata.getServiceDetails();
         const { email, tokenToMakeFreeCall, tokenExpiryDateBlock } =
             this._serviceMetadata.getFreeCallConfig();
-        if (tokenExpiryDateBlock === 0 || !email || email.length === 0) {
-            throw Error('invalid entries');
+        if (tokenExpiryDateBlock === 0 || email === '' || tokenToMakeFreeCall === '') {
+            // throw Error('invalid entries');
+            console.log('freecall _generateSignature error: invalid entries')
+            return undefined
         }
         const enhancedToken = /^0x/.test(tokenToMakeFreeCall.toLowerCase())
             ? tokenToMakeFreeCall.substring(2, tokenToMakeFreeCall.length)
@@ -142,7 +144,8 @@ class FreeCallPaymentStrategy {
             } = await this._getFreeCallStateRequestProperties();
 
             //  if the token for freecall is empty, then user is taken to paid call directly
-            if (!tokenForFreeCall) {
+            if (!tokenForFreeCall || !tokenExpiryDateBlock || !userId || !signature || !currentBlockNumber) {
+                console.log('freecall state request error: invalid entries')
                 return undefined;
             }
 
@@ -156,7 +159,9 @@ class FreeCallPaymentStrategy {
 
             return request;
         } catch (err) {
-            throw new Error('Free call state request error: ', err);
+            // throw new Error('Free call state request error: ', err);
+            console.log('freecall state request error: invalid entries')
+            return undefined
         }
     }
 
