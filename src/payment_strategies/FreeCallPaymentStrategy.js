@@ -1,7 +1,7 @@
 import { toBNString } from '../utils/bignumber_helper';
 import EncodingUtils from '../utils/encodingUtils';
+import { logMessage } from '../utils/logger';
 import { FreecallMetadataGenerator } from '../utils/metadataUtils';
-import { error, info } from 'loglevel';
 
 class FreeCallPaymentStrategy {
     /**
@@ -25,14 +25,10 @@ class FreeCallPaymentStrategy {
         try {
             const freeCallsAvailable = await this.getFreeCallsAvailable();
 
-            info('is freecalls available', freeCallsAvailable, {
-                tags: ['freecalls'],
-            });
+            logMessage('info', 'FreeCallPaymentStrategy', 'is freecalls available');
             return freeCallsAvailable > 0;
         } catch (err) {
-            error('is freecall available error', err, {
-                tags: ['freecalls'],
-            });
+            logMessage('error', 'FreeCallPaymentStrategy', 'is freecall available error');
             return false;
         }
     }
@@ -68,9 +64,7 @@ class FreeCallPaymentStrategy {
     async getFreeCallsAvailable() {
         const freeCallStateRequest = await this._getFreeCallStateRequest();
         if (!freeCallStateRequest) {
-            info('freecalls state request is undefined', {
-                tags: ['freecalls'],
-            });
+            logMessage('info', 'FreeCallPaymentStrategy', 'freecalls state request is undefined');
             // Bypassing free calls if the token is empty
             return undefined;
         }
@@ -80,9 +74,7 @@ class FreeCallPaymentStrategy {
                 freeCallStateRequest,
                 (err, responseMessage) => {
                     if (err) {
-                        error('getting freecalls error', err, {
-                            tags: ['freecalls'],
-                        });
+                        logMessage('error', 'FreeCallPaymentStrategy', 'getting freecalls error');
                         reject(err);
                     } else {
                         resolve(responseMessage);

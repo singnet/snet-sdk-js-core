@@ -1,5 +1,5 @@
-import { debug, info } from 'loglevel';
 import { toBNString } from '../utils/bignumber_helper';
+import { logMessage } from '../utils/logger';
 
 class PaymentChannelProvider {
     /**
@@ -67,9 +67,7 @@ class PaymentChannelProvider {
                 receipt.blockNumber
             );
             const newPaymentChannel = openChannels[0];
-            info(
-                `New PaymentChannel[id: ${newPaymentChannel.channelId}] opened`
-            );
+            logMessage('info', 'PaymentChannelProvider', `New PaymentChannel[id: ${newPaymentChannel.channelId}] opened`)
             return newPaymentChannel;
         } catch (error) {
             throw new Error('getting newly opened channel error: ', error);
@@ -112,10 +110,7 @@ class PaymentChannelProvider {
             this.group,
             this.lastReadBlock
         );
-        debug(
-            `Found ${newPaymentChannels.length} payment channel open events`,
-            { tags: ['PaymentChannel'] }
-        );
+        logMessage('debug', 'PaymentChannelProvider', `Found ${newPaymentChannels.length} payment channel open events`);
         this.paymentChannels = [...this.paymentChannels, ...newPaymentChannels];
         return this.paymentChannels;
     }
@@ -124,9 +119,7 @@ class PaymentChannelProvider {
      * @returns {Promise.<PaymentChannel[]>}
      */
     async updateChannelStates() {
-        info('Updating payment channel states', {
-            tags: ['PaymentChannel'],
-        });
+        logMessage('info', 'PaymentChannelProvider', 'Updating payment channel states')
         const loadedChannels = await this.loadOpenChannels();
         console.log('loadedChannels: ', loadedChannels);
 

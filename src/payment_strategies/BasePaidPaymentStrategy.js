@@ -1,5 +1,5 @@
-import { error } from 'loglevel';
 import PaymentChannelProvider from '../mpe/PaymentChannelProvider';
+import { logMessage } from '../utils/logger';
 
 class BasePaidPaymentStrategy {
     /**
@@ -24,16 +24,19 @@ class BasePaidPaymentStrategy {
      * @returns {Promise<PaymentChannel>}
      * @protected
      */
-    async _selectChannel(preselectChannelId) {
+    async _selectChannel(preselectChannelId, servicePrice) {
+        let serviceCallPrice = servicePrice;
+        if (!serviceCallPrice) {
+            serviceCallPrice = this._getPrice();
+        }
         const paymentChannelProvider = new PaymentChannelProvider(
             this._account,
             this._serviceMetadata
         );
-
+        
         await paymentChannelProvider.updateChannelStates();
 
         const { paymentChannels } = paymentChannelProvider;
-        const serviceCallPrice = this._getPrice();
         const extendedChannelFund = serviceCallPrice * this._callAllowance;
         const mpeBalance = await this._account.escrowBalance();
         const currentBlockNumber = await this._account.getCurrentBlockNumber();
@@ -93,7 +96,7 @@ class BasePaidPaymentStrategy {
     }
 
     _getPrice() {
-        error('_getPrice must be implemented in the sub classes');
+        logMessage('error', 'BasePaidPaymentStrategy', '_getPrice must be implemented in the sub classes')
     }
 
     /**

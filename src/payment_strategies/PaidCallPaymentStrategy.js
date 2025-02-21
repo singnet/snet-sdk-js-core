@@ -41,6 +41,26 @@ class PaidCallPaymentStrategy extends BasePaidPaymentStrategy {
         return metadataFields;
     }
 
+      /**
+   * @returns {Promise<[{'snet-payment-type': string}, {'snet-payment-channel-id': string}, {'snet-payment-channel-nonce': string}, {'snet-payment-channel-amount': string}, {'snet-payment-channel-signature-bin': Buffer}]>}
+  */
+      async getTrainingPaymentMetadata(modelId, amount) {
+        const channel = await this._selectChannel(undefined, amount);
+        const currentNonce = channel.state.nonce;
+        const signature = await this._generateSignature(channel.channelId, currentNonce, amount); 
+
+        const metadataFields = {
+            type: 'train-call',
+            modelId,
+            channelId: channel.channelId,
+            channelNonce: channel.state.nonce,
+            channelAmount: amount,
+            signatureBytes: signature,
+        };
+    
+        return metadataFields;
+      }
+
     /**
      * Generate signature for getting payment metadata
      * @param {uint256} channelId
