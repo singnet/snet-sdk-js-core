@@ -110,9 +110,7 @@ class ServiceMetadataProvider {
         const metadataGenerator = new PaymentMetadataGenerator();
 
         if (!this._options.paidCallMetadataGenerator) {
-            const metadata =
-                await paymentChannelManagementStrategy.getPaymentMetadata(this);
-            return metadata;
+            return await paymentChannelManagementStrategy.getPaymentMetadata(this);
         }
 
         logMessage('debug', 'ServiceMetadataProvider', 'Selecting PaymentChannel using the given strategy');

@@ -1,5 +1,7 @@
 import PaymentChannelProvider from '../mpe/PaymentChannelProvider';
 import { logMessage } from '../utils/logger';
+const BigNumber = require('bignumber.js');
+
 
 class BasePaidPaymentStrategy {
     /**
@@ -62,13 +64,13 @@ class BasePaidPaymentStrategy {
                 selectedPaymentChannel =
                     await paymentChannelProvider.depositAndOpenChannel(
                         serviceCallPrice,
-                        extendedExpiry
+                        new BigNumber(extendedExpiry)
                     );
             } else {
                 selectedPaymentChannel =
                     await paymentChannelProvider.openChannel(
                         serviceCallPrice,
-                        extendedExpiry
+                        new BigNumber(extendedExpiry)
                     );
             }
         } else {
@@ -83,13 +85,13 @@ class BasePaidPaymentStrategy {
             defaultExpiration
         );
         if (hasSufficientFunds && !isValid) {
-            await selectedPaymentChannel.extendExpiry(extendedExpiry);
+            await selectedPaymentChannel.extendExpiry(new BigNumber(extendedExpiry));
         } else if (!hasSufficientFunds && isValid) {
-            await selectedPaymentChannel.addFunds(extendedChannelFund);
+            await selectedPaymentChannel.addFunds(new BigNumber(extendedChannelFund));
         } else if (!hasSufficientFunds && !isValid) {
             await selectedPaymentChannel.extendAndAddFunds(
-                extendedExpiry,
-                extendedChannelFund
+                new BigNumber(extendedExpiry),
+                new BigNumber(extendedChannelFund)
             );
         }
         return selectedPaymentChannel;

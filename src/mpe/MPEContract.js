@@ -4,6 +4,7 @@ import Web3 from 'web3';
 import PaymentChannel from './PaymentChannel';
 import { toBNString } from '../utils/bignumber_helper';
 import { logMessage } from '../utils/logger';
+import {BigNumber} from "bignumber.js";
 
 class MPEContract {
     /**

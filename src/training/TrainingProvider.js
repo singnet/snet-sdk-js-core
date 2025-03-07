@@ -1,4 +1,4 @@
-import { UNIFIED_SIGN_EXPIRY, TRANSACTIONS_MESSAGE, serviceStatus } from '../constants/TrainingConstants';
+import { serviceStatus, TRANSACTIONS_MESSAGE, UNIFIED_SIGN_EXPIRY } from '../constants/TrainingConstants';
 import { logMessage } from '../utils/logger';
 
 class TrainingProvider {
@@ -109,8 +109,7 @@ class TrainingProvider {
   
       _trainingMetadataRequest() {
         const ModelStateRequest = this.TrainingModelProvider._getTrainingMetadataRequestMethodDescriptor();
-        const modelStateRequest = new ModelStateRequest();
-        return modelStateRequest;
+          return new ModelStateRequest();
       }
   
       async getAllModels(params) {

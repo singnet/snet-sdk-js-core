@@ -30,15 +30,13 @@ class PaidCallPaymentStrategy extends BasePaidPaymentStrategy {
             amount
         );
 
-        const metadataFields = {
+        return {
             type: 'escrow',
             channelId: channel.channelId,
             channelNonce: channel.state.nonce,
             channelAmount: amount,
             signatureBytes: signature,
         };
-
-        return metadataFields;
     }
 
       /**
