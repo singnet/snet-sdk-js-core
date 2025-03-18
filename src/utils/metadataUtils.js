@@ -45,6 +45,18 @@ export class PaymentMetadataGenerator extends MetadataGenerator {
     }
 }
 
+export class TrainingPaymentMetadataGenerator extends PaymentMetadataGenerator {
+    getMetadataFields(metadata) {
+        return {
+            ...super.getMetadataFields(metadata),
+            modelId: {
+                header: 'snet-train-model-id',
+                value: metadata.modelId,
+            },
+        }
+    }
+}
+
 export class PrepaidMetadataGenerator extends MetadataGenerator {
     getMetadataFields(metadata) {
         return {

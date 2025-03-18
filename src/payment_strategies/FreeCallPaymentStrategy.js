@@ -83,11 +83,9 @@ class FreeCallPaymentStrategy {
             )
         );
 
-        const freeCallsAvailable = freeCallsAvailableReply
+        return freeCallsAvailableReply
             ? freeCallsAvailableReply.getFreeCallsAvailable()
             : 0;
-
-        return freeCallsAvailable;
     }
 
     /**
@@ -155,10 +153,8 @@ class FreeCallPaymentStrategy {
     }
 
     async _getFreeCallStateRequestProperties() {
-        const freecallConfig = this._serviceMetadata.getFreeCallConfig();
-
         const { email, tokenToMakeFreeCall, tokenExpiryDateBlock } =
-            freecallConfig;
+            this._serviceMetadata.getFreeCallConfig();
         const currentBlockNumber = await this._account.getCurrentBlockNumber();
         const signature = await this._generateSignature(currentBlockNumber);
         return {
@@ -170,19 +166,19 @@ class FreeCallPaymentStrategy {
         };
     }
 
-    // /**
-    //  * create the grpc client for free call state service
-    //  * @returns {module:grpc.Client}
-    //  * @private
-    //  */
-    // _generateFreeCallStateServiceClient() {
-    //     const serviceEndpoint = this._serviceMetadata._getServiceEndpoint();
-    //     const grpcCredentials = this._getGrpcCredentials(serviceEndpoint);
-    //     return new services.FreeCallStateServiceClient(
-    //         serviceEndpoint.host,
-    //         grpcCredentials
-    //     );
-    // }
+    /**
+     * create the grpc client for free call state service
+     * @returns {module:grpc.Client}
+     * @private
+     */
+    _generateFreeCallStateServiceClient() {
+        const serviceEndpoint = this._serviceMetadata._getServiceEndpoint();
+        const grpcCredentials = this._getGrpcCredentials(serviceEndpoint);
+        return new services.FreeCallStateServiceClient(
+            serviceEndpoint.host,
+            grpcCredentials
+        );
+    }
 }
 
 export default FreeCallPaymentStrategy;
