@@ -45,17 +45,17 @@ class PaidCallPaymentStrategy extends BasePaidPaymentStrategy {
       async getTrainingPaymentMetadata(modelId, amount) {
         const channel = await this._selectChannel(undefined, amount);
         const currentNonce = channel.state.nonce;
-        const signature = await this._generateSignature(channel.channelId, currentNonce, amount); 
+        const signature = await this._generateSignature(channel.channelId, currentNonce, amount);
 
         const metadataFields = {
             type: 'train-call',
-            modelId,
+            modelId: modelId,
             channelId: channel.channelId,
             channelNonce: channel.state.nonce,
             channelAmount: amount,
             signatureBytes: signature,
         };
-    
+
         return metadataFields;
       }
 

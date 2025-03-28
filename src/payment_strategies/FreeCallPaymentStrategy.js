@@ -99,7 +99,6 @@ class FreeCallPaymentStrategy {
         const { email, tokenToMakeFreeCall, tokenExpiryDateBlock } =
             this._serviceMetadata.getFreeCallConfig();
         if (tokenExpiryDateBlock === 0 || email === '' || tokenToMakeFreeCall === '') {
-            // throw Error('invalid entries');
             console.log('freecall _generateSignature error: invalid entries')
             return undefined
         }
@@ -151,7 +150,6 @@ class FreeCallPaymentStrategy {
 
             return request;
         } catch (err) {
-            // throw new Error('Free call state request error: ', err);
             console.log('freecall state request error: invalid entries')
             return undefined
         }

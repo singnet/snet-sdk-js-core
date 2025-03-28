@@ -18,6 +18,7 @@ export const TRANSACTIONS_MESSAGE = {
     VALIDATE_MODEL_PRICE: 'validate_model_price',
     TRAIN_MODEL_PRICE: 'train_model_price',
     VALIDATE_MODEL: 'validate_model',
+    UPLOAD_AND_VALIDATE: 'upload_and_validate',
     TRAIN_MODEL: 'train_model',
     CREATE_MODEL: 'create_model',
     UPDATE_MODEL: 'update_model',
