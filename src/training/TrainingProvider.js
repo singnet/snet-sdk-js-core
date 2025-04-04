@@ -206,7 +206,7 @@ class TrainingProvider {
 
     async _getModelStatusRequest(params) {
         const message = TRANSACTIONS_MESSAGE.GET_MODEL;
-        const authorizationRequest = params.isUnifiedSign ?
+        const authorizationRequest = params?.isUnifiedSign ?
             await this._getUnifiedAuthorizationRequest(params.address)
             : await this._getSignedAuthorizationRequest(params.address, message);
 
@@ -235,7 +235,7 @@ class TrainingProvider {
 
     async _trainModelPriceRequest(params) {
         const message = TRANSACTIONS_MESSAGE.TRAIN_MODEL_PRICE;
-        const authorizationRequest = params.isUnifiedSign ?
+        const authorizationRequest = params?.isUnifiedSign ?
             await this._getUnifiedAuthorizationRequest(params.address)
             : await this._getSignedAuthorizationRequest(params.address, message);
 
@@ -295,7 +295,7 @@ class TrainingProvider {
 
     async _validateModelPriceRequest(params) {
         const message = TRANSACTIONS_MESSAGE.VALIDATE_MODEL_PRICE;
-        const authorizationRequest = params.isUnifiedSign ?
+        const authorizationRequest = params?.isUnifiedSign ?
             await this._getUnifiedAuthorizationRequest(params.address)
             : await this._getSignedAuthorizationRequest(params.address, message);
 
@@ -342,7 +342,7 @@ class TrainingProvider {
 
     async _getAllModelsRequest(params) {
         const message = TRANSACTIONS_MESSAGE.GET_ALL_MODELS;
-        const authorizationRequest = params.isUnifiedSign ?
+        const authorizationRequest = params?.isUnifiedSign ?
             await this._getUnifiedAuthorizationRequest(params.address)
             : await this._getSignedAuthorizationRequest(params.address, message);
 
@@ -350,7 +350,7 @@ class TrainingProvider {
         const modelStateRequest = new ModelStateRequest();
 
         modelStateRequest.setAuthorization(authorizationRequest);
-        params?.statuses.forEach(status => modelStateRequest.addStatuses(status));
+        params?.statuses && params?.statuses.forEach(status => modelStateRequest.addStatuses(status));
         modelStateRequest.setIsPublic(params?.isPublic ? params.isPublic : null);
         modelStateRequest.setGrpcServiceName(params?.serviceName);
         modelStateRequest.setGrpcMethodName(params?.grpcMethod);
