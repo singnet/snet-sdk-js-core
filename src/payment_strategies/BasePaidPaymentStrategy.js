@@ -36,7 +36,7 @@ class BasePaidPaymentStrategy {
             this._serviceMetadata
         );
         
-        await paymentChannelProvider.updateChannelStates();
+        await paymentChannelProvider.updateChannelState(preselectChannelId);
 
         const { paymentChannels } = paymentChannelProvider;
         const extendedChannelFund = serviceCallPrice * this._callAllowance;
@@ -49,12 +49,7 @@ class BasePaidPaymentStrategy {
         const extendedExpiry = defaultExpiration + this._blockOffset;
 
         if (preselectChannelId) {
-            const foundPreselectChannel = paymentChannels.find(
-                (el) => el.channelId === preselectChannelId
-            );
-            if (foundPreselectChannel) {
-                return foundPreselectChannel;
-            }
+            return paymentChannelProvider.findPreselectChannel(paymentChannels, preselectChannelId);
         }
 
         let selectedPaymentChannel;
