@@ -482,7 +482,7 @@ class TrainingProvider {
         const NewModelRequest = this.TrainingModelProvider._getNewModelRequestMethodDescriptor();
         const newModelRequest = new NewModelRequest();
 
-        newModelRequest.setName(params.name);
+        newModelRequest.setName(params.modelName);
         newModelRequest.setGrpcMethodName(params.grpcMethod);
         newModelRequest.setGrpcServiceName(params.serviceName);
         newModelRequest.setDescription(params.description);
