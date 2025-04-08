@@ -1,6 +1,5 @@
 import AGITokenAbi from 'singularitynet-token-contracts/abi/SingularityNetToken.json';
 import AGITokenNetworks from 'singularitynet-token-contracts/networks/SingularityNetToken.json';
-import { debug, info } from 'loglevel';
 import { toBNString } from './utils/bignumber_helper';
 import { logMessage, stringifyWithBigInt } from './utils/logger';
 
@@ -186,14 +185,28 @@ class Account {
 
     async _getGas(operation) {
         try {
-            const gasPrice = await this._web3.eth.getGasPrice();
+            let gasPrice = await this._web3.eth.getGasPrice();
+            gasPrice = BigInt(gasPrice);
+
+            if (gasPrice <= 15000000000n) {
+                gasPrice += gasPrice / 3n;
+            } else if (gasPrice > 15000000000n && gasPrice <= 50000000000n) {
+                gasPrice += gasPrice / 5n;
+            } else if (gasPrice > 50000000000n && gasPrice <= 150000000000n) {
+                gasPrice += 7000000000n;
+            } else if (gasPrice > 150000000000n) {
+                gasPrice += gasPrice / 10n;
+            }
+
             const address = await this.getAddress();
             const estimatedGas = await operation.estimateGas({ from: address });
+
             return { gasLimit: estimatedGas, gasPrice };
         } catch (error) {
-            throw new Error('get gas error: ', error);
+            throw new Error(`get gas error: ${error.message}`);
         }
     }
+
 
     async _transactionCount() {
         try {

@@ -95,7 +95,6 @@ class PaymentChannel {
      */
     async syncState() {
         logMessage('debug', 'PaymentChannel', `Syncing PaymentChannel[id: ${this._channelId}] state`)
-        // try {
         const latestChannelInfoOnBlockchain = await this._mpeContract.channels(
             this._channelId
         );
@@ -117,20 +116,10 @@ class PaymentChannel {
             currentSignedAmount,
             availableAmount,
         };
-        // logger.debug(
-        //     `Latest PaymentChannel[id: ${this._channelId}] state:`,
-        //     this._state,
-        //     { tags: ['PaymentChannel'] }
-        // );
         return Promise.resolve(this);
-        // } catch (error) {
-        //     throw new Error('syncing payment channel state error: ', error);
-        // }
     }
 
     async _currentChannelState() {
-        console.log('_currentChannelState start');
-
         logMessage('debug', 'PaymentChannel', `Fetching latest PaymentChannel[id: ${this._channelId}] state from service daemon`);
         try {
             const paymentChannelProvider = new PaymentChannelProvider(

@@ -1,5 +1,7 @@
 import PaymentChannelProvider from '../mpe/PaymentChannelProvider';
 import { logMessage } from '../utils/logger';
+const BigNumber = require('bignumber.js');
+
 
 class BasePaidPaymentStrategy {
     /**
@@ -34,7 +36,7 @@ class BasePaidPaymentStrategy {
             this._serviceMetadata
         );
         
-        await paymentChannelProvider.updateChannelStates();
+        await paymentChannelProvider.updateChannelState(preselectChannelId);
 
         const { paymentChannels } = paymentChannelProvider;
         const extendedChannelFund = serviceCallPrice * this._callAllowance;
@@ -47,12 +49,7 @@ class BasePaidPaymentStrategy {
         const extendedExpiry = defaultExpiration + this._blockOffset;
 
         if (preselectChannelId) {
-            const foundPreselectChannel = paymentChannels.find(
-                (el) => el.channelId === preselectChannelId
-            );
-            if (foundPreselectChannel) {
-                return foundPreselectChannel;
-            }
+            return paymentChannelProvider.findPreselectChannel(paymentChannels, preselectChannelId);
         }
 
         let selectedPaymentChannel;
@@ -62,13 +59,13 @@ class BasePaidPaymentStrategy {
                 selectedPaymentChannel =
                     await paymentChannelProvider.depositAndOpenChannel(
                         serviceCallPrice,
-                        extendedExpiry
+                        new BigNumber(extendedExpiry)
                     );
             } else {
                 selectedPaymentChannel =
                     await paymentChannelProvider.openChannel(
                         serviceCallPrice,
-                        extendedExpiry
+                        new BigNumber(extendedExpiry)
                     );
             }
         } else {
@@ -83,13 +80,13 @@ class BasePaidPaymentStrategy {
             defaultExpiration
         );
         if (hasSufficientFunds && !isValid) {
-            await selectedPaymentChannel.extendExpiry(extendedExpiry);
+            await selectedPaymentChannel.extendExpiry(new BigNumber(extendedExpiry));
         } else if (!hasSufficientFunds && isValid) {
-            await selectedPaymentChannel.addFunds(extendedChannelFund);
+            await selectedPaymentChannel.addFunds(new BigNumber(extendedChannelFund));
         } else if (!hasSufficientFunds && !isValid) {
             await selectedPaymentChannel.extendAndAddFunds(
-                extendedExpiry,
-                extendedChannelFund
+                new BigNumber(extendedExpiry),
+                new BigNumber(extendedChannelFund)
             );
         }
         return selectedPaymentChannel;

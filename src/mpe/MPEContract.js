@@ -4,6 +4,7 @@ import Web3 from 'web3';
 import PaymentChannel from './PaymentChannel';
 import { toBNString } from '../utils/bignumber_helper';
 import { logMessage } from '../utils/logger';
+import {BigNumber} from "bignumber.js";
 
 class MPEContract {
     /**
@@ -297,12 +298,10 @@ class MPEContract {
     async getPastOpenChannels(
         account,
         serviceMetadata,
-        group,
-        startingBlockNumber
+        group
     ) {
         try {
-            const fromBlock =
-                startingBlockNumber || (await this._deploymentBlockNumber());
+            const fromBlock = await this._deploymentBlockNumber();
             let contract = this._contract;
             if (this.rpcEndpoint) {
                 const _web3 = new Web3(this.rpcEndpoint);

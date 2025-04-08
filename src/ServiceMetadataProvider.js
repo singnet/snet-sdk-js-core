@@ -53,7 +53,7 @@ class ServiceMetadataProvider {
             ({ price_model }) => price_model === 'fixed_price'
         );
 
-        return new BigNumber(fixedPricing.price_in_cogs); // all placec of using convert to Number
+        return new BigNumber(fixedPricing.price_in_cogs);
     }
 
     /**
@@ -110,9 +110,7 @@ class ServiceMetadataProvider {
         const metadataGenerator = new PaymentMetadataGenerator();
 
         if (!this._options.paidCallMetadataGenerator) {
-            const metadata =
-                await paymentChannelManagementStrategy.getPaymentMetadata(this);
-            return metadata;
+            return await paymentChannelManagementStrategy.getPaymentMetadata(this);
         }
 
         logMessage('debug', 'ServiceMetadataProvider', 'Selecting PaymentChannel using the given strategy');
@@ -147,7 +145,7 @@ class ServiceMetadataProvider {
             };
             return metadataGenerator.generateMetadata(metadataValues);
         } catch (error) {
-            throw new Error('fathing payment metada error: ', error);
+            throw new Error('fetching payment metadata error: ', error);
         }
     }
 
