@@ -137,7 +137,9 @@ class PaymentChannelProvider {
             channel = loadedChannels[0]
         }
 
-        await channel.syncState();
+        if (channel) {
+            await channel.syncState();
+        }
         return loadedChannels;
     }
 
