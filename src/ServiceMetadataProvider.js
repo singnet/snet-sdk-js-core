@@ -83,13 +83,13 @@ class ServiceMetadataProvider {
      * Get the configuration for the freecall
      * @returns {FreeCallConfig}
      */
-    getFreeCallConfig() {
-        return {
-            email: this._options.email,
-            tokenToMakeFreeCall: this._options.tokenToMakeFreeCall,
-            tokenExpiryDateBlock: this._options.tokenExpiryDateBlock,
-        };
-    }
+    // getFreeCallConfig() { //TODO: remove. Get from Daemon instead
+    //     return {
+    //         email: this._options.email,
+    //         tokenToMakeFreeCall: this._options.tokenToMakeFreeCall,
+    //         tokenExpiryDateBlock: this._options.tokenExpiryDateBlock,
+    //     };
+    // }
 
     /**
      * @returns {Promise<number>}
