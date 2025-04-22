@@ -13,6 +13,7 @@ class FreeCallPaymentStrategy {
         this._serviceMetadata = serviceMetadata;
         this._freeCallStateServiceClient = undefined; // must be implemented as subclass property
         this._freeCallStateMethodDescriptor = undefined; // must be implemented as subclass property
+        this._freeCallTokenMethodDescriptor = undefined; // must be implemented as subclass property
         this._encodingUtils = new EncodingUtils();
         this.metadataGenerator = new FreecallMetadataGenerator();
     }
@@ -46,7 +47,7 @@ class FreeCallPaymentStrategy {
             this._encodingUtils.hexStringToBytes(tokenToMakeFreeCall);
         const metadataFields = {
             type: 'free-call',
-            userId: email,
+            userAddress: email,
             currentBlockNumber,
             freecallAuthToken: tokenBytes,
             freecallTokenExpiryBlock: tokenExpiryDateBlock,
@@ -121,13 +122,34 @@ class FreeCallPaymentStrategy {
      * @returns {FreeCallStateRequest}
      * @private
      */
+        async _getFreeCallTokenRequest(params) {
+            try {
+                const request =
+                    new this._freeCallTokenMethodDescriptor.requestType();
+    
+                request.setGroupId(params.groupId);
+                request.setOrgId(params.orgId);
+                request.setAddress(params.address);
+
+                return request;
+            } catch (err) {
+                console.log('freecall state request error: invalid entries')
+                return undefined
+            }
+        }
+
+    /**
+     * create the request for the freecall state service grpc
+     * @returns {FreeCallStateRequest}
+     * @private
+     */
     async _getFreeCallStateRequest() {
         try {
             const request =
                 new this._freeCallStateMethodDescriptor.requestType();
 
             const {
-                userId,
+                userAddress,
                 tokenForFreeCall,
                 tokenExpiryDateBlock,
                 signature,
@@ -135,14 +157,14 @@ class FreeCallPaymentStrategy {
             } = await this._getFreeCallStateRequestProperties();
 
             //  if the token for freecall is empty, then user is taken to paid call directly
-            if (!tokenForFreeCall || !tokenExpiryDateBlock || !userId || !signature || !currentBlockNumber) {
+            if (!tokenForFreeCall || !tokenExpiryDateBlock || !userAddress || !signature || !currentBlockNumber) {
                 console.log('freecall state request error: invalid entries')
                 return undefined;
             }
 
             const tokenBytes =
                 this._encodingUtils.hexStringToBytes(tokenForFreeCall);
-            request.setUserId(userId);
+            request.setUserAddress(userAddress);
             request.setTokenForFreeCall(tokenBytes);
             request.setTokenExpiryDateBlock(tokenExpiryDateBlock);
             request.setSignature(signature);
@@ -156,12 +178,14 @@ class FreeCallPaymentStrategy {
     }
 
     async _getFreeCallStateRequestProperties() {
-        const { email, tokenToMakeFreeCall, tokenExpiryDateBlock } =
-            this._serviceMetadata.getFreeCallConfig();
+        // const { tokenToMakeFreeCall, tokenExpiryDateBlock } =
+        //     this._serviceMetadata.getFreeCallConfig();
+        const tokenToMakeFreeCall = await this._getFreeCallTokenRequest();
         const currentBlockNumber = await this._account.getCurrentBlockNumber();
+        const userAddress = await this._account.getAddress();
         const signature = await this._generateSignature(currentBlockNumber);
         return {
-            userId: email,
+            userAddress: userAddress,
             tokenForFreeCall: tokenToMakeFreeCall,
             tokenExpiryDateBlock,
             signature,
