@@ -81,9 +81,9 @@ export class FreecallMetadataGenerator extends MetadataGenerator {
     getMetadataFields(metadata) {
         return {
             ...super.getMetadataFields(metadata),
-            userId: {
-                header: 'snet-free-call-user-id',
-                value: metadata?.userId,
+            userAddress: {
+                header: 'snet-free-call-user-address',
+                value: metadata?.userAddress,
             },
             currentBlockNumber: {
                 header: 'snet-current-block-number',
