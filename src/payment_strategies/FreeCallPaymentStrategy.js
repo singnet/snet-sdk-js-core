@@ -24,8 +24,8 @@ class FreeCallPaymentStrategy {
      * @returns {Promise<({'snet-free-call-auth-token-bin': FreeCallConfig.tokenToMakeFreeCall}|{'snet-free-call-token-expiry-block': *}|{'snet-payment-type': string}|{'snet-free-call-user-id': *}|{'snet-current-block-number': *})[]>}
      */
     async getPaymentMetadata() {
-        const {address, orgId, serviceId, groupId} = await this._getNecessaryFieldsForGetFreeCallsAvailable()
-        const tokenWithExpiration = await this._getFreeCallsTokenWithExpiration(address, orgId, serviceId, groupId)
+        const {address} = await this._getNecessaryFieldsForGetFreeCallsAvailable();
+        const tokenWithExpiration = await this._getFreeCallsTokenWithExpiration(address);
 
         const currentBlockNumber = await this._account.getCurrentBlockNumber();
         const signature = await this._generateSignature(address, currentBlockNumber, tokenWithExpiration.tokenHex, tokenWithExpiration.tokenExpirationBlock);
@@ -45,27 +45,21 @@ class FreeCallPaymentStrategy {
     /* getFreeCallsAvailable helpers */
     async _getNecessaryFieldsForGetFreeCallsAvailable() {
         const address = await this._account.getAddress();
-        const { orgId, serviceId, groupId } =
-        this._serviceMetadata.getServiceDetails();
-        return { address, orgId, serviceId, groupId };
+        return { address };
     }
-    _getFreeCallsTokenWithExpirationRequest(address, orgId, serviceId, groupId) {
+    _getFreeCallsTokenWithExpirationRequest(address) {
         const request = new this._freeCallTokenMethodDescriptor.requestType();
-        request.setGroupId(groupId);
-        // request.setServiceId(serviceId);
-        request.setOrgId(orgId);
         request.setAddress(address);
         return request;
     }
-    async _getFreeCallsTokenWithExpiration(address, orgId, serviceId, groupId) {
-        const request = this._getFreeCallsTokenWithExpirationRequest(address, orgId, serviceId, groupId);
+    async _getFreeCallsTokenWithExpiration(address) {
+        const request = this._getFreeCallsTokenWithExpirationRequest(address);
         const tokenWithExpirationResponse = await wrapRpcToPromise(
         this._freeCallStateServiceClient, "getFreeCallToken", request);
-        // const token = tokenWithExpirationResponse.getToken();
+        const token = tokenWithExpirationResponse.getToken(); //INFO: not used
         const tokenHex = tokenWithExpirationResponse.getTokenHex();
-        // const tokenBase64 = tokenWithExpirationResponse.getTokenBase64();
         const tokenExpirationBlock = tokenWithExpirationResponse.getTokenExpirationBlock();
-        return { tokenHex, tokenExpirationBlock };
+        return { token, tokenHex, tokenExpirationBlock };
     }
 
     /**
@@ -139,8 +133,8 @@ class FreeCallPaymentStrategy {
      * @public
      */
     async getFreeCallsAvailable() {
-        const { address, orgId, serviceId, groupId } = await this._getNecessaryFieldsForGetFreeCallsAvailable();
-        const tokenWithExpiration = await this._getFreeCallsTokenWithExpiration(address, orgId, serviceId, groupId);
+        const { address } = await this._getNecessaryFieldsForGetFreeCallsAvailable();
+        const tokenWithExpiration = await this._getFreeCallsTokenWithExpiration(address);
         const avaliableFreeCalls = await this._getFreeCallsAvaliableWithFreeCallsToken(address, tokenWithExpiration);
         return avaliableFreeCalls;
     }

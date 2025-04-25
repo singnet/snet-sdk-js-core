@@ -1,3 +1,4 @@
+const OK_CODE = 0;
 /**
  * helper function to simplify calls of grpc. Now you can simply use it with try catch block
  * @param {*} serviceClient
@@ -6,8 +7,6 @@
  * @param {*} [metadata]
  * @returns { Promise }
  */
-
-const OK_CODE = 0;
 export function wrapRpcToPromise(serviceClient, remoteProcedureName, requestMessage, metadata) {
   return new Promise((resolve, reject) => {
     serviceClient[remoteProcedureName](requestMessage, metadata,
