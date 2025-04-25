@@ -48,6 +48,7 @@ class FreeCallPaymentStrategy {
         return { address };
     }
     _getFreeCallsTokenWithExpirationRequest(address) {
+        logMessage('debug', 'FreeCallPaymentStrategy', `creating free call token request for address=${address}`);
         const request = new this._freeCallTokenMethodDescriptor.requestType();
         request.setAddress(address);
         return request;
@@ -68,6 +69,7 @@ class FreeCallPaymentStrategy {
      * @private
      */
     async _generateSignature(address, currentBlockNumber, tokenToMakeFreeCall, tokenExpiryDateBlock) {
+        logMessage('debug', 'FreeCallPaymentStrategy', `generating signature`);
         const { orgId, serviceId, groupId } = this._serviceMetadata.getServiceDetails();
 
         const enhancedToken = /^0x/.test(tokenToMakeFreeCall.toLowerCase()) ? tokenToMakeFreeCall.substring(2, tokenToMakeFreeCall.length) : tokenToMakeFreeCall;
@@ -101,8 +103,8 @@ class FreeCallPaymentStrategy {
      * @private
      */
     async _getFreeCallStateRequest(address, tokenWithExpiration) {
+        logMessage('debug', 'FreeCallPaymentStrategy', `creating free call request with obtained before token for address=${address}`);
         const request = new this._freeCallStateMethodDescriptor.requestType();
-
         const { signature, currentBlockNumber } = await this._getFreeCallStateRequestProperties(address, tokenWithExpiration);
         const tokenBytes = this._encodingUtils.hexStringToBytes(tokenWithExpiration.tokenHex);
         request.setUserAddress(address);
