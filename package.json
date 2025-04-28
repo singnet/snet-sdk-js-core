@@ -36,8 +36,8 @@
   "dependencies": {
     "bignumber.js": "9.1.2",
     "loglevel": "1.9.2",
-    "singularitynet-platform-contracts": "1.0.4",
-    "singularitynet-token-contracts": "3.0.3"
+    "singularitynet-platform-contracts": "2.0.2",
+    "singularitynet-token-contracts": "3.1.0"
   },
   "peerDependencies": {
     "lodash": "4.17.21",
