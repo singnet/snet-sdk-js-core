@@ -12,7 +12,9 @@ const DEFAULT_CONFIG = {
     defaultGasLimit: 210000,
     defaultGasPrice: 4700000,
     ipfsEndpoint: 'http://ipfs.singularitynet.io:80',
-    logLevel: 'info'
+    logLevel: 'info',
+    tokenName: 'FET',
+    standType: 'prod'
 };
 
 class SnetSDK {
@@ -39,7 +41,9 @@ class SnetSDK {
         this._mpeContract = new MPEContract(
             this._web3,
             this._networkId,
-            rpcEndpoint
+            rpcEndpoint,
+            this._config.tokenName,
+            this._config.standType
         );
         this._account = new Account(
             this._web3,
@@ -52,7 +56,9 @@ class SnetSDK {
             new IPFSMetadataProvider(
                 this._web3,
                 this._networkId,
-                this._config.ipfsEndpoint
+                this._config.ipfsEndpoint,
+                this._config.tokenName,
+                this._config.standType               
             );
     }
 

@@ -4,7 +4,7 @@ import { logMessage } from './utils/logger';
 import { LIGHTHOUSE_ENDPOINT, STORAGE_TYPE_FILECOIN, STORAGE_TYPE_IPFS, STORAGE_URL_FILECOIN_PREFIX, STORAGE_URL_IPFS_PREFIX } from './constants/StorageConstants';
 
 export default class IPFSMetadataProvider {
-    constructor(web3, networkId, ipfsEndpoint) {
+    constructor(web3, networkId, ipfsEndpoint, tokenName, standName) {
         this._web3 = web3;
         this._networkId = networkId;
         this._ipfsEndpoint = ipfsEndpoint;
@@ -13,7 +13,7 @@ export default class IPFSMetadataProvider {
         this._storageTypeFilecoin = STORAGE_TYPE_FILECOIN;
         this._storageUrlIpfsPrefix = STORAGE_URL_IPFS_PREFIX;
         this._storageUrlFilecoinPrefix = STORAGE_URL_FILECOIN_PREFIX;
-        const registryAddress = RegistryNetworks[this._networkId].address;
+        const registryAddress = RegistryNetworks[this._networkId][tokenName][standName].address;
         this._registryContract = new this._web3.eth.Contract(
             RegistryAbi,
             registryAddress
@@ -29,7 +29,7 @@ export default class IPFSMetadataProvider {
         logMessage('debug', 'MetadataProvider', `Fetching service metadata [org: ${orgId} | service: ${serviceId}]`);
 
         let orgIdBytes = this._web3.utils.fromAscii(orgId);
-        orgIdBytes = orgIdBytes.padEnd(66, '0'); // 66 = '0x' + 64 hex characters
+        orgIdBytes = orgIdBytes.padEnd(66, '0'); // 66 = '0x' + 64 hex characters        
 
         let serviceIdBytes = this._web3.utils.fromAscii(serviceId);
         serviceIdBytes = serviceIdBytes.padEnd(66, '0'); // 66 = '0x' + 64 hex characters

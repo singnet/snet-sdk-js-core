@@ -11,13 +11,13 @@ class MPEContract {
      * @param {Web3} web3
      * @param {number} networkId
      */
-    constructor(web3, networkId, rpcEndpoint) {
+    constructor(web3, networkId, rpcEndpoint, tokenName, standType) {
         this._web3 = web3;
         this._networkId = networkId;
         this.rpcEndpoint = rpcEndpoint;
         this._contract = new this._web3.eth.Contract(
             MPEAbi,
-            MPENetworks[networkId].address
+            MPENetworks[networkId][tokenName][standType].address
         );
     }
 
