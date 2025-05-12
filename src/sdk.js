@@ -7,15 +7,7 @@ import IPFSMetadataProvider from './IPFSMetadataProvider';
 import { DefaultPaymentStrategy } from './payment_strategies';
 import { setLevel } from 'loglevel';
 import { logMessage } from './utils/logger';
-
-const DEFAULT_CONFIG = {
-    defaultGasLimit: 210000,
-    defaultGasPrice: 4700000,
-    ipfsEndpoint: 'https://ipfs.singularitynet.io:443',
-    logLevel: 'info',
-    tokenName: 'FET',
-    standType: 'prod'
-};
+import { DEFAULT_CONFIG, validateConfig } from './utils/configHelper';
 
 class SnetSDK {
     /**
@@ -23,6 +15,7 @@ class SnetSDK {
      * @param {IPFSMetadataProvider} metadataProvider
      */
     constructor(config, metadataProvider = undefined) {
+        validateConfig(config);
         this._config = {
             ...DEFAULT_CONFIG,
             ...config,
