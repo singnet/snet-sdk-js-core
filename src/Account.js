@@ -2,7 +2,7 @@ import AGIXTokenAbi from 'singularitynet-token-contracts/abi/SingularityNetToken
 import AGIXTokenNetworks from 'singularitynet-token-contracts/networks/SingularityNetToken';
 import FETTokenAbi from 'singularitynet-token-contracts/abi/FetchToken';
 import FETTokenNetworks from 'singularitynet-token-contracts/networks/FetchToken';
-import { toBNString } from './utils/bignumber_helper';
+import { toBNString } from './utils/bignumberHelper';
 import { logMessage, stringifyWithBigInt } from './utils/logger';
 
 class Account {

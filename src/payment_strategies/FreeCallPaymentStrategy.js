@@ -1,4 +1,4 @@
-import { toBNString } from "../utils/bignumber_helper";
+import { toBNString } from "../utils/bignumberHelper";
 import { hexStringToBytes } from "../utils/encodingUtils";
 import { logMessage } from "../utils/logger";
 import { FreecallMetadataGenerator } from "../utils/metadataUtils";

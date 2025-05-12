@@ -1,4 +1,4 @@
-import { toBNString } from '../../src/utils/bignumber_helper';
+import { toBNString } from '../../src/utils/bignumberHelper';
 
 test('should convert a valid integer to a BigNumber string', () => {
   const result = toBNString(100);
