@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { toBNString, uint8ArrayToBN } from '../utils/bignumber_helper';
+import { toBNString, uint8ArrayToBN } from '../utils/bignumberHelper';
 import PaymentChannelProvider from './PaymentChannelProvider';
 import { logMessage } from '../utils/logger';
 

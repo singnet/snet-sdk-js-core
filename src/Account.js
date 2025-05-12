@@ -1,19 +1,23 @@
-import AGITokenAbi from 'singularitynet-token-contracts/abi/SingularityNetToken.json';
-import AGITokenNetworks from 'singularitynet-token-contracts/networks/SingularityNetToken.json';
-import { toBNString } from './utils/bignumber_helper';
+import AGIXTokenAbi from 'singularitynet-token-contracts/abi/SingularityNetToken';
+import AGIXTokenNetworks from 'singularitynet-token-contracts/networks/SingularityNetToken';
+import FETTokenAbi from 'singularitynet-token-contracts/abi/FetchToken';
+import FETTokenNetworks from 'singularitynet-token-contracts/networks/FetchToken';
+import { toBNString } from './utils/bignumberHelper';
 import { logMessage, stringifyWithBigInt } from './utils/logger';
 
 class Account {
     /**
      * @param {Web3} web3
      * @param {number} networkId
+     * @param {string} token
      * @param {MPEContract} mpeContract
      * @param {IdentityProvider} identity
      */
-    constructor(web3, networkId, mpeContract, identity) {
+    constructor(web3, networkId, token, mpeContract, identity) {
         this._identity = identity;
         this._web3 = web3;
         this._networkId = networkId;
+        this._token = token;
         this._tokenContract = this._generateTokenContract();
         this._mpeContract = mpeContract;
     }
@@ -159,11 +163,19 @@ class Account {
     }
 
     _generateTokenContract() {
-        return new this._web3.eth.Contract(
-            AGITokenAbi,
-            AGITokenNetworks[this._networkId].address
-        );
-    }
+        const contractsByToken = {
+          FET: {
+            abi: FETTokenAbi,
+            networks: FETTokenNetworks
+          },
+          AGIX: {
+            abi: AGIXTokenAbi,
+            networks: AGIXTokenNetworks
+          }
+        }
+        const tokenContract = contractsByToken[this._token];
+        return new this._web3.eth.Contract(tokenContract.abi, tokenContract.networks[this._networkId].address);
+      }
 
     async _baseTransactionObject(operation, to) {
         try {

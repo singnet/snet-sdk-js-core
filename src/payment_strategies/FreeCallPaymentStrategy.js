@@ -1,5 +1,5 @@
-import { toBNString } from "../utils/bignumber_helper";
-import EncodingUtils from "../utils/encodingUtils";
+import { toBNString } from "../utils/bignumberHelper";
+import { hexStringToBytes } from "../utils/encodingUtils";
 import { logMessage } from "../utils/logger";
 import { FreecallMetadataGenerator } from "../utils/metadataUtils";
 import { wrapRpcToPromise } from "../utils/protoHelper";
@@ -15,7 +15,6 @@ class FreeCallPaymentStrategy {
         this._freeCallStateServiceClient = undefined; // must be implemented as subclass property
         this._freeCallStateMethodDescriptor = undefined; // must be implemented as subclass property
         this._freeCallTokenMethodDescriptor = undefined; // must be implemented as subclass property
-        this._encodingUtils = new EncodingUtils();
         this.metadataGenerator = new FreecallMetadataGenerator();
     }
 
@@ -29,7 +28,7 @@ class FreeCallPaymentStrategy {
 
         const currentBlockNumber = await this._account.getCurrentBlockNumber();
         const signature = await this._generateSignature(address, currentBlockNumber, tokenWithExpiration.tokenHex, tokenWithExpiration.tokenExpirationBlock);
-        const tokenBytes = this._encodingUtils.hexStringToBytes(tokenWithExpiration.tokenHex);
+        const tokenBytes = hexStringToBytes(tokenWithExpiration.tokenHex);
         const metadataFields = {
             type: "free-call",
             userAddress: address,
@@ -106,7 +105,7 @@ class FreeCallPaymentStrategy {
         logMessage('debug', 'FreeCallPaymentStrategy', `creating free call request with obtained before token for address=${address}`);
         const request = new this._freeCallStateMethodDescriptor.requestType();
         const { signature, currentBlockNumber } = await this._getFreeCallStateRequestProperties(address, tokenWithExpiration);
-        const tokenBytes = this._encodingUtils.hexStringToBytes(tokenWithExpiration.tokenHex);
+        const tokenBytes = hexStringToBytes(tokenWithExpiration.tokenHex);
         request.setUserAddress(address);
         request.setTokenForFreeCall(tokenBytes);
         request.setTokenExpiryDateBlock(tokenWithExpiration.tokenExpirationBlock);

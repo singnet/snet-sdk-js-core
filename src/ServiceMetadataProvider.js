@@ -1,7 +1,7 @@
 import { PaymentMetadataGenerator } from './utils/metadataUtils';
 import { BigNumber } from 'bignumber.js';
 import { isEmpty } from 'lodash';
-import { toBNString } from './utils/bignumber_helper';
+import { toBNString } from './utils/bignumberHelper';
 import { logMessage } from './utils/logger';
 
 class ServiceMetadataProvider {

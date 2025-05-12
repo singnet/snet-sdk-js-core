@@ -1,5 +1,5 @@
 import BasePaidPaymentStrategy from './BasePaidPaymentStrategy';
-import EncodingUtils from '../utils/encodingUtils';
+import { utfStringToBytes } from '../utils/encodingUtils';
 
 class PrepaidPaymentStrategy extends BasePaidPaymentStrategy {
     /**
@@ -15,7 +15,6 @@ class PrepaidPaymentStrategy extends BasePaidPaymentStrategy {
         callAllowance = 1
     ) {
         super(account, serviceMetadata, blockOffset, callAllowance);
-        this._encodingUtils = new EncodingUtils();
         this._concurrencyManager = serviceMetadata.concurrencyManager;
     }
 
@@ -33,7 +32,7 @@ class PrepaidPaymentStrategy extends BasePaidPaymentStrategy {
             channel,
             concurrentCallsPrice
         );
-        const tokenBytes = this._encodingUtils.utfStringToBytes(token);
+        const tokenBytes = utfStringToBytes(token);
         const metadataFields = {
             type: 'prepaid-call',
             channelId: channel.channelId,

@@ -24,6 +24,12 @@ export const stringifyWithBigInt = (data) => {
     return JSON.stringify(data, replacer, 2);
 };
 
+export const VALID_LOG_LEVELS = {
+    debug: debug,
+    info: info,
+    error: error,
+};
+
 
 /**
  * Logs a message in the specified format.
@@ -32,15 +38,10 @@ export const stringifyWithBigInt = (data) => {
  * @param {string} message - The log message.
  */
 export const logMessage = (level, moduleName, message) => {
-    const validLevels = {
-        debug: debug,
-        info: info,
-        error: error,
-    };
-
-    const effectiveLevel = validLevels[level] ? level : 'info';
+    
+    const effectiveLevel = VALID_LOG_LEVELS[level] ? level : 'info';
     const formattedMessage = formatLogMessage(effectiveLevel, moduleName, message);
 
-    validLevels[effectiveLevel](formattedMessage);
+    VALID_LOG_LEVELS[effectiveLevel](formattedMessage);
 };
 
