@@ -36,7 +36,7 @@
   "dependencies": {
     "bignumber.js": "9.1.2",
     "loglevel": "1.9.2",
-    "singularitynet-platform-contracts": "2.0.2",
+    "singularitynet-platform-contracts": "2.1.0",
     "singularitynet-token-contracts": "3.1.0"
   },
   "peerDependencies": {

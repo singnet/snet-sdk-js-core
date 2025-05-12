@@ -15,6 +15,8 @@ class MPEContract {
         this._web3 = web3;
         this._networkId = networkId;
         this.rpcEndpoint = rpcEndpoint;
+        this._tokenName = tokenName;
+        this._standType = standType;
         this._contract = new this._web3.eth.Contract(
             MPEAbi,
             MPENetworks[networkId][tokenName][standType].address
@@ -307,7 +309,7 @@ class MPEContract {
                 const _web3 = new Web3(this.rpcEndpoint);
                 contract = new _web3.eth.Contract(
                     MPEAbi,
-                    MPENetworks[this._networkId].address
+                    MPENetworks[this._networkId][this._tokenName][this._standType].address
                 );
             }
             logMessage('debug', 'MPEContract', `Fetching all payment channel open events starting at block: ${fromBlock}`);
@@ -364,7 +366,7 @@ class MPEContract {
 
     async _deploymentBlockNumber() {
         try {
-            const { transactionHash } = MPENetworks[this._networkId];
+            const { transactionHash } = MPENetworks[this._networkId][this._tokenName][this._standType];
             const { blockNumber } = await this._web3.eth.getTransactionReceipt(
                 transactionHash
             );

@@ -48,6 +48,7 @@ class SnetSDK {
         this._account = new Account(
             this._web3,
             this._networkId,
+            config.tokenName,
             this._mpeContract,
             identity
         );
