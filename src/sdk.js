@@ -11,7 +11,7 @@ import { logMessage } from './utils/logger';
 const DEFAULT_CONFIG = {
     defaultGasLimit: 210000,
     defaultGasPrice: 4700000,
-    ipfsEndpoint: 'http://ipfs.singularitynet.io:80',
+    ipfsEndpoint: 'https://ipfs.singularitynet.io:443',
     logLevel: 'info',
     tokenName: 'FET',
     standType: 'prod'
