@@ -13,7 +13,7 @@ class Account {
      * @param {MPEContract} mpeContract
      * @param {IdentityProvider} identity
      */
-    constructor(web3, networkId, mpeContract, identity) {
+    constructor(web3, networkId, token, mpeContract, identity) {
         this._identity = identity;
         this._web3 = web3;
         this._networkId = networkId;
