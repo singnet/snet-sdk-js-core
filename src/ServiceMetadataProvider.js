@@ -1,8 +1,8 @@
 import { PaymentMetadataGenerator } from './utils/metadataUtils';
 import { BigNumber } from 'bignumber.js';
 import { isEmpty } from 'lodash';
-import { debug } from 'loglevel';
-import { toBNString } from './utils/bignumber_helper';
+import { toBNString } from './utils/bignumberHelper';
+import { logMessage } from './utils/logger';
 
 class ServiceMetadataProvider {
     constructor(orgId, serviceId, metadata, mpeContract, group, options = {}) {
@@ -29,7 +29,7 @@ class ServiceMetadataProvider {
     }
 
     get concurrencyManager() {
-        error('concurrencyManager must be implemented in the sub classes');
+        logMessage('error', 'ServiceMetadataProvider', 'concurrencyManager must be implemented in the sub classes');
         return undefined;
     }
 
@@ -53,7 +53,7 @@ class ServiceMetadataProvider {
             ({ price_model }) => price_model === 'fixed_price'
         );
 
-        return new BigNumber(fixedPricing.price_in_cogs); // all placec of using convert to Number
+        return new BigNumber(fixedPricing.price_in_cogs);
     }
 
     /**
@@ -66,7 +66,7 @@ class ServiceMetadataProvider {
             serviceId: this._metadata.serviceId,
             groupId: this._group.group_id,
             groupIdInBytes: this._group.group_id_in_bytes,
-            daemonEndpoint: this.getServiceEndpoint(),
+            daemonEndpoint: this._getServiceEndpoint(),
         };
     }
 
@@ -77,18 +77,6 @@ class ServiceMetadataProvider {
         const paymentExpirationThreshold =
             this._group.payment.payment_expiration_threshold;
         return paymentExpirationThreshold || 0;
-    }
-
-    /**
-     * Get the configuration for the freecall
-     * @returns {FreeCallConfig}
-     */
-    getFreeCallConfig() {
-        return {
-            email: this._options.email,
-            tokenToMakeFreeCall: this._options.tokenToMakeFreeCall,
-            tokenExpiryDateBlock: this._options.tokenExpirationBlock,
-        };
     }
 
     /**
@@ -110,14 +98,10 @@ class ServiceMetadataProvider {
         const metadataGenerator = new PaymentMetadataGenerator();
 
         if (!this._options.paidCallMetadataGenerator) {
-            const metadata =
-                await paymentChannelManagementStrategy.getPaymentMetadata(this);
-            return metadata;
+            return await paymentChannelManagementStrategy.getPaymentMetadata(this);
         }
 
-        debug('Selecting PaymentChannel using the given strategy', {
-            tags: ['PaypalPaymentMgmtStrategy, gRPC'],
-        });
+        logMessage('debug', 'ServiceMetadataProvider', 'Selecting PaymentChannel using the given strategy');
         try {
             const channel =
                 await paymentChannelManagementStrategy.selectChannel(
@@ -133,10 +117,7 @@ class ServiceMetadataProvider {
             const channelIdStr = toBNString(channelId);
             const nonceStr = toBNString(nonce);
             const signingAmountStr = toBNString(signingAmount);
-            info(
-                `Using PaymentChannel[id: ${channelIdStr}] with nonce: ${nonceStr} and amount: ${signingAmountStr} and `,
-                { tags: ['PaymentChannelManagementStrategy', 'gRPC'] }
-            );
+            logMessage('info', 'ServiceMetadataProvider', `Using PaymentChannel[id: ${channelIdStr}] with nonce: ${nonceStr} and amount: ${signingAmountStr}`)
             const { signatureBytes } =
                 await this.serviceClient._options.paidCallMetadataGenerator(
                     channelId,
@@ -150,15 +131,14 @@ class ServiceMetadataProvider {
                 channelAmount: signingAmount,
                 signatureBytes: signatureBytes,
             };
-            const metadata = metadataGenerator.generateMetadata(metadataValues);
-            return metadata;
+            return metadataGenerator.generateMetadata(metadataValues);
         } catch (error) {
-            throw new Error('fathing payment metada error: ', error);
+            throw new Error('fetching payment metadata error: ', error);
         }
     }
 
     enhanceGroupInfo(group) {
-        if (isEmpty(group)) {
+        if(isEmpty(group)) {
             return group;
         }
 
@@ -172,7 +152,7 @@ class ServiceMetadataProvider {
         };
     }
 
-    getServiceEndpoint() {
+    _getServiceEndpoint() {
         if (this._options.endpoint) {
             return new URL(this._options.endpoint);
         }
@@ -182,9 +162,7 @@ class ServiceMetadataProvider {
             throw new Error('Service endpoints is empty');
         }
         const endpoint = endpoints[0];
-        debug(`Service endpoint: ${endpoint}`, {
-            tags: ['gRPC'],
-        });
+        logMessage('debug', 'ServiceMetadataProvider', `Service endpoint: ${endpoint}`)
 
         return new URL(endpoint);
     }

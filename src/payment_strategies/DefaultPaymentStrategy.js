@@ -12,7 +12,6 @@ class DefaultPaymentStrategy {
         this._account = account;
         this._concurrentCalls = concurrentCalls;
         this._channelId = undefined;
-        // serviceMetadata is required for getting any strategies. Maybe at to params of class?
     }
 
     get concurrentCalls() {

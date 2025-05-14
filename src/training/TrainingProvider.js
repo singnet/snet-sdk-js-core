@@ -1,20 +1,8 @@
-import { debug } from 'loglevel';
+import {serviceStatus, TRANSACTIONS_MESSAGE, UNIFIED_SIGN_EXPIRY} from '../constants/TrainingConstants';
+import {logMessage} from '../utils/logger';
+import fs from 'fs'
+import path from "path";
 
-const MODELS_STATUS = {
-    0: 'CREATED',
-    1: 'IN_PROGRESS',
-    2: 'ERRORED',
-    3: 'COMPLETED',
-    4: 'DELETED',
-};
-
-const TRANSACTIONS_MESSAGE = {
-    GET_STATUS: '__get_model_status',
-    GET_MODELS: '__get_existing_model',
-    CREATE_MODEL: '__create_model',
-    UPDATE_MODEL: '__update_model',
-    DELETE_MODEL: '__delete_model',
-};
 class TrainingProvider {
     /**
      * Initializing the training provider
@@ -28,14 +16,9 @@ class TrainingProvider {
             this.TrainingModelProvider?._generateModelServiceClient(
                 serviceEndpoint
             );
+        this._unifiedSigns = {};
     }
 
-    /**
-     * Signing request
-     * @param {string} address - The public address of account
-     * @param {TRANSACTIONS_MESSAGE[transactionType]} message - message by transactions type, should start with __
-     * @private
-     */
     async _requestSignForModel(address, message) {
         const currentBlockNumber = await this.account.getCurrentBlockNumber();
         const signatureBytes = await this.account.signData(
@@ -43,175 +26,445 @@ class TrainingProvider {
             { t: 'address', v: address },
             { t: 'uint256', v: currentBlockNumber }
         );
-
         return {
             currentBlockNumber,
-            signatureBytes,
+            signatureBytes
         };
     }
 
-    /**
-     * Initializing the training provider
-     * @param {TRANSACTIONS_MESSAGE[transactionType]} message - message by transactions type, should start with __
-     * @param {string} address - The public address of account
-     * @returns {AuthorizationRequest}
-     * @private
-     */
-    async _formAuthorizationRequest(message, address) {
-        const { currentBlockNumber, signatureBytes } =
-            await this._requestSignForModel(address, message);
+    async _getUnifiedSign(address) {
+        const keyOfUnifiedSign = address;
+        const blockNumber = await this.account.getCurrentBlockNumber();
 
-        const AuthorizationRequest =
-            this.TrainingModelProvider._getAuthorizationRequestMethodDescriptor();
+        if (
+            this._unifiedSigns[keyOfUnifiedSign] &&
+            blockNumber - this._unifiedSigns[keyOfUnifiedSign].currentBlockNumber <= UNIFIED_SIGN_EXPIRY
+        ) {
+            return this._unifiedSigns[keyOfUnifiedSign];
+        }
+        const {
+            currentBlockNumber,
+            signatureBytes
+        } = await this._requestSignForModel(address, TRANSACTIONS_MESSAGE.UNIFIED_SIGN);
+        this._unifiedSigns[keyOfUnifiedSign] = {
+            currentBlockNumber,
+            signatureBytes
+        };
+        return {
+            currentBlockNumber,
+            signatureBytes
+        };
+    }
+
+    _getAuthorizationRequest(currentBlockNumber, message, signatureBytes, address) {
+        logMessage('debug', 'TrainingProvider', `creating authorization request ${message}`);
+        const AuthorizationRequest = this.TrainingModelProvider._getAuthorizationRequestMethodDescriptor();
         const authorizationRequest = new AuthorizationRequest();
 
         authorizationRequest.setCurrentBlock(Number(currentBlockNumber));
         authorizationRequest.setMessage(message);
         authorizationRequest.setSignature(signatureBytes);
         authorizationRequest.setSignerAddress(address);
-
         return authorizationRequest;
     }
 
-    /**
-     * Get the model status
-     * @param {{address: string, modelId: string, grpcMethod: string, grpcServiceName: string}} params - The params for generate request
-     * @public
-     */
-    async getModelStatus(params) {
-        const request = await this._trainingStatusStateRequest(params);
+    async _getSignedAuthorizationRequest(address, message) {
+        const {
+            currentBlockNumber,
+            signatureBytes
+        } = await this._requestSignForModel(address, message);
 
-        return new Promise((resolve, reject) => {
-            this._modelServiceClient.get_model_status(
-                request,
-                (err, response) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        const modelStatus = response.getStatus();
-                        resolve(MODELS_STATUS[modelStatus]);
-                    }
-                }
-            );
-        });
-    }
-
-    /**
-     * Generate request for getting the model status
-     * @param {{address: string, modelId: string, grpcMethod: string, grpcServiceName: string}} params - The params for generate request
-     * @private
-     */
-    async _trainingStatusStateRequest(params) {
-        const message = TRANSACTIONS_MESSAGE.GET_STATUS;
-        const authorizationRequest = await this._formAuthorizationRequest(
+        return this._getAuthorizationRequest(
+            currentBlockNumber,
             message,
-            params.address
+            signatureBytes,
+            address
         );
-
-        const ModelStateRequest =
-            this.TrainingModelProvider._getUpdateModelRequestMethodDescriptor();
-        const modelStateRequest = new ModelStateRequest();
-
-        const ModelDetailsRequest =
-            this.TrainingModelProvider._getModelDetailsRequestMethodDescriptor();
-        const modelDetailsRequest = new ModelDetailsRequest();
-
-        modelDetailsRequest.setModelId(params.modelId);
-        modelDetailsRequest.setGrpcMethodName(params.grpcMethod);
-        modelDetailsRequest.setGrpcServiceName(params.grpcServiceName);
-
-        modelStateRequest.setAuthorization(authorizationRequest);
-        modelStateRequest.setUpdateModelDetails(modelDetailsRequest);
-        return modelStateRequest;
     }
 
-    /**
-     * Get the existing models
-     * @param {{grpcMethod: string, grpcServiceName: string, address: string}} params - The params for generate request
-     * @public
-     */
-    async getExistingModel(params) {
-        const request = await this._trainingStateRequest(params);
-        request;
+    async _getUnifiedAuthorizationRequest(address) {
+        const {
+            currentBlockNumber,
+            signatureBytes
+        } = await this._getUnifiedSign(address);
+
+        return this._getAuthorizationRequest(
+            currentBlockNumber,
+            TRANSACTIONS_MESSAGE.UNIFIED_SIGN,
+            signatureBytes,
+            address
+        );
+    }
+
+    async getMethodMetadata(params) {
+        const request = this._getMethodMetadataRequest(params);
 
         return new Promise((resolve, reject) => {
-            this._modelServiceClient.get_all_models(
-                request,
-                (err, response) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        const modelDetails = response.getListOfModelsList();
-
-                        const data = modelDetails.map((item) => {
-                            return {
-                                modelId: item.getModelId(),
-                                methodName: item.getGrpcMethodName(),
-                                serviceName: item.getGrpcServiceName(),
-                                description: item.getDescription(),
-                                status: item.getStatus(),
-                                updatedDate: item.getUpdatedDate(),
-                                addressList: item.getAddressListList(),
-                                modelName: item.getModelName(),
-                                publicAccess: item.getIsPubliclyAccessible(),
-                                dataLink: item.getTrainingDataLink(),
-                            };
-                        });
-                        resolve(data);
-                    }
+            this._modelServiceClient.get_method_metadata(request, (err, response) => {
+                if (err) {
+                    logMessage('debug', 'TrainingProvider', `get_method_metadata ${err} ${response}`);
+                    reject(err);
+                } else {
+                    const methodMetadata = {
+                        defaultModelId: response.getDefaultModelId(),
+                        maxModelsPerUser: response.getMaxModelsPerUser(),
+                        datasetMaxSizeMb: response.getDatasetMaxSizeMb(),
+                        datasetMaxCountFiles: response.getDatasetMaxCountFiles(),
+                        datasetMaxSizeSingleFileMb: response.getDatasetMaxSizeSingleFileMb(),
+                        datasetFilesType: response.getDatasetFilesType(),
+                        datasetType: response.getDatasetType(),
+                        datasetDescription: response.getDatasetDescription(),
+                    };
+                    resolve(methodMetadata);
                 }
-            );
+            });
         });
     }
 
-    /**
-     * Generate request for getting the existing models
-     * @param {{grpcMethod: string, grpcServiceName: string, address: string}} params - The params for generate request
-     * @privat
-     */
-    async _trainingStateRequest(params) {
-        const message = TRANSACTIONS_MESSAGE.GET_MODELS;
-        const ModelStateRequest =
-            this.TrainingModelProvider._getModelRequestMethodDescriptor();
+    _getMethodMetadataRequest(params) {
+        const ModelStateRequest = this.TrainingModelProvider._getMethodMetadataRequestMethodDescriptor();
         const modelStateRequest = new ModelStateRequest();
+
+        if (params?.modelId) {
+            modelStateRequest.setModelId(params.modelId);
+            return modelStateRequest;
+        }
         modelStateRequest.setGrpcMethodName(params.grpcMethod);
-        modelStateRequest.setGrpcServiceName(params.grpcServiceName);
+        modelStateRequest.setGrpcServiceName(params.serviceName);
 
-        const authorizationRequest = await this._formAuthorizationRequest(
-            message,
-            params.address
-        );
-
-        modelStateRequest.setAuthorization(authorizationRequest);
         return modelStateRequest;
     }
 
-    /**
-     * Create new model
-     * @param {{address: string, modelName: string, grpcMethod: string, grpcServiceName: string, description: string, publicAccess: boolean, accessAddressList: string[], dataLink: string, orgId: string, serviceId: string, groupId: string}} params - The params for generate request
-     * @public
-     */
+    async getTrainingMetadata() {
+        const request = this._trainingMetadataRequest();
+        return new Promise((resolve, reject) => {
+            this._modelServiceClient.get_training_metadata(request, (err, response) => {
+                if (err) {
+                    logMessage('debug', 'TrainingProvider', `get_training_metadata ${err} ${response}`);
+                    reject(err);
+                } else {
+                    const parsedResponse = response.toObject();
+                    resolve(parsedResponse);
+                }
+            });
+        });
+    }
+
+    _trainingMetadataRequest() {
+        const ModelStateRequest = this.TrainingModelProvider._getTrainingMetadataRequestMethodDescriptor();
+        return new ModelStateRequest();
+    }
+
+    async getAllModels(params) {
+        const request = await this._getAllModelsRequest(params);
+        return new Promise((resolve, reject) => {
+            this._modelServiceClient.get_all_models(request, (err, response) => {
+                if (err) {
+                    logMessage('debug', 'TrainingProvider', `get_all_models ${err} ${response}`);
+                    reject(err);
+                } else {
+                    const modelDetails = response.getListOfModelsList();
+                    const data = modelDetails.map(item => this._parseModelDetails(item));
+                    resolve(data);
+                }
+            });
+        });
+    }
+
+    _parseModelDetails(modelDetails) {
+        return {
+            modelId: modelDetails.getModelId(),
+            methodName: modelDetails.getGrpcMethodName(),
+            serviceName: modelDetails.getGrpcServiceName(),
+            description: modelDetails.getDescription(),
+            status: serviceStatus[modelDetails.getStatus()],
+            updatedDate: modelDetails.getUpdatedDate(),
+            accessAddressList: modelDetails.getAddressListList(),
+            modelName: modelDetails.getName(),
+            publicAccess: modelDetails.getIsPublic(),
+            dataLink: modelDetails.getTrainingDataLink(),
+            updatedByAddress: modelDetails.getUpdatedByAddress()
+        };
+    }
+
+    async getModel(params) {
+        const request = await this._getModelStatusRequest(params);
+
+        return new Promise((resolve, reject) => {
+            this._modelServiceClient.get_model(request, (err, response) => {
+                    if (err) {
+                        logMessage('debug', 'TrainingProvider', `get_model ${err} ${response}`);
+                        reject(err);
+                    } else {
+                        const model = this._parseModelDetails(response);
+                        resolve(model);
+                    }
+                }
+            );
+        });
+    }
+
+    async _getModelStatusRequest(params) {
+        const message = TRANSACTIONS_MESSAGE.GET_MODEL;
+        const authorizationRequest = params?.isUnifiedSign ?
+            await this._getUnifiedAuthorizationRequest(params.address)
+            : await this._getSignedAuthorizationRequest(params.address, message);
+
+        const ModelStateRequest = this.TrainingModelProvider._getModelStatusRequestMethodDescriptor();
+        const modelStateRequest = new ModelStateRequest();
+
+        modelStateRequest.setAuthorization(authorizationRequest);
+        modelStateRequest.setModelId(params.modelId);
+        return modelStateRequest;
+    }
+
+    async getTrainModelPrice(params) {
+        const request = await this._trainModelPriceRequest(params);
+        return new Promise((resolve, reject) => {
+            this._modelServiceClient.train_model_price(request, (err, response) => {
+                if (err) {
+                    logMessage('debug', 'TrainingProvider', `train_model_price ${err} ${response}`);
+                    reject(err);
+                } else {
+                    const price = response.getPrice();
+                    resolve(price);
+                }
+            });
+        });
+    }
+
+    async _trainModelPriceRequest(params) {
+        const message = TRANSACTIONS_MESSAGE.TRAIN_MODEL_PRICE;
+        const authorizationRequest = params?.isUnifiedSign ?
+            await this._getUnifiedAuthorizationRequest(params.address)
+            : await this._getSignedAuthorizationRequest(params.address, message);
+
+        const ModelStateRequest = this.TrainingModelProvider._getTrainModelPriceRequestMethodDescriptor();
+        const modelStateRequest = new ModelStateRequest();
+
+        modelStateRequest.setAuthorization(authorizationRequest);
+        modelStateRequest.setModelId(params.modelId);
+        return modelStateRequest;
+    }
+
+    async trainModel(params) {
+        const amount = await this.getTrainModelPrice({...params, isUnifiedSign: true});
+        const request = await this._trainModelRequest(params);
+        const paymentMetadata = await this._generateTrainingPaymentMetadata(params.modelId, amount);
+
+        return new Promise((resolve, reject) => {
+            this._modelServiceClient.train_model(request, paymentMetadata, (err, response) => {
+                if (err) {
+                    logMessage('debug', 'TrainingProvider', `train_model ${err} ${response}`);
+                    reject(err);
+                } else {
+                    const modelStatus = serviceStatus[response.getStatus()];
+                    resolve(modelStatus);
+                }
+            });
+        });
+    }
+
+    async _trainModelRequest(params) {
+        const ModelStateRequest = this.TrainingModelProvider._getTrainModelRequestMethodDescriptor();
+        const modelStateRequest = new ModelStateRequest();
+
+        const message = TRANSACTIONS_MESSAGE.TRAIN_MODEL;
+        const authorizationRequest = await this._getSignedAuthorizationRequest(params.address, message);
+
+        modelStateRequest.setAuthorization(authorizationRequest);
+        modelStateRequest.setModelId(params.modelId);
+
+        return modelStateRequest;
+    }
+
+    async getValidateModelPrice(params) {
+        const request = await this._validateModelPriceRequest(params);
+        return new Promise((resolve, reject) => {
+            this._modelServiceClient.validate_model_price(request, (err, response) => {
+                if (err) {
+                    logMessage('debug', 'TrainingProvider', `validate_model_price ${err} ${response}`);
+                    reject(err);
+                } else {
+                    const price = response.getPrice();
+                    resolve(price);
+                }
+            });
+        });
+    }
+
+    async _validateModelPriceRequest(params) {
+        const message = TRANSACTIONS_MESSAGE.VALIDATE_MODEL_PRICE;
+        const authorizationRequest = params?.isUnifiedSign ?
+            await this._getUnifiedAuthorizationRequest(params.address)
+            : await this._getSignedAuthorizationRequest(params.address, message);
+
+        const ModelStateRequest = this.TrainingModelProvider._getValidateModelPriceRequestMethodDescriptor();
+        const modelStateRequest = new ModelStateRequest();
+
+        modelStateRequest.setAuthorization(authorizationRequest);
+        modelStateRequest.setModelId(params.modelId);
+        modelStateRequest.setTrainingDataLink(params.trainingDataLink);
+
+        return modelStateRequest;
+    }
+
+    async validateModel(params) {
+        const amount = await this.getValidateModelPrice({...params, isUnifiedSign: true});
+        const request = await this._validateModelRequest(params);
+        const paymentMetadata = await this._generateTrainingPaymentMetadata(params.modelId, amount);
+
+        return new Promise((resolve, reject) => {
+            this._modelServiceClient.validate_model(request, paymentMetadata, (err, response) => {
+                if (err) {
+                    logMessage('debug', 'TrainingProvider', `validate_model ${err} ${response}`);
+                    reject(err);
+                } else {
+                    const status = serviceStatus[response.getStatus()];
+                    resolve(status);
+                }
+            });
+        });
+    }
+
+    async _validateModelRequest(params) {
+        const message = TRANSACTIONS_MESSAGE.VALIDATE_MODEL;
+        const authorizationRequest = await this._getSignedAuthorizationRequest(params.address, message);
+
+        const ModelStateRequest = this.TrainingModelProvider._getValidateModelRequestMethodDescriptor();
+        const modelStateRequest = new ModelStateRequest();
+
+        modelStateRequest.setAuthorization(authorizationRequest);
+        modelStateRequest.setModelId(params.modelId);
+        modelStateRequest.setTrainingDataLink(params.trainingDataLink);
+        return modelStateRequest;
+    }
+
+    async _getAllModelsRequest(params) {
+        const message = TRANSACTIONS_MESSAGE.GET_ALL_MODELS;
+        const authorizationRequest = params?.isUnifiedSign ?
+            await this._getUnifiedAuthorizationRequest(params.address)
+            : await this._getSignedAuthorizationRequest(params.address, message);
+
+        const ModelStateRequest = this.TrainingModelProvider._getAllModelsRequestMethodDescriptor();
+        const modelStateRequest = new ModelStateRequest();
+
+        modelStateRequest.setAuthorization(authorizationRequest);
+        params?.statuses && params?.statuses.forEach(status => modelStateRequest.addStatuses(status));
+        modelStateRequest.setIsPublic(params?.isPublic ? params.isPublic : null);
+        modelStateRequest.setGrpcServiceName(params?.serviceName);
+        modelStateRequest.setGrpcMethodName(params?.grpcMethod);
+        modelStateRequest.setName(params.name);
+        modelStateRequest.setCreatedByAddress(params?.createdByAddress);
+        modelStateRequest.setPageSize(params?.pageSize);
+        modelStateRequest.setPage(params?.page);
+
+        return modelStateRequest;
+    }
+
+    async uploadAndValidateModel(params, filepath, methodMetadata) {
+        const amount = await this.getValidateModelPrice({
+            ...params,
+            isUnifiedSign: true
+        });
+        const fileStats = fs.statSync(filepath);
+        const fileName = path.basename(filepath);
+        const fileExt = path.extname(fileName).substring(1);
+        const fileData = fs.readFileSync(filepath);
+        const fileSize = fileStats.size;
+        const fileSizeMB = fileSize / (1024 * 1024);
+
+        if (fileSizeMB > methodMetadata.datasetMaxSizeSingleFileMb) {
+            throw new Error(`The file exceeds the allowed size: ${fileSizeMB}MB > ${methodMetadata.datasetMaxSizeSingleFileMb}MB`);
+        }
+
+        const allowedTypes = methodMetadata.datasetType.split(', ').map(ext => ext.trim());
+        if (!allowedTypes.includes(fileExt)) {
+            throw new Error(`Invalid file type: ${fileExt}. Allowed: ${allowedTypes.join(', ')}`);
+        }
+        const batchSize = 1024 * 1024;
+        const batchCount = Math.ceil(fileSize / batchSize);
+        const paymentMetadata = await this._generateTrainingPaymentMetadata(params.modelId, amount);
+        const message = TRANSACTIONS_MESSAGE.UPLOAD_AND_VALIDATE;
+        const authorizationRequest = await this._getSignedAuthorizationRequest(params.address, message);
+        const UploadAndValidateModelRequest = this.TrainingModelProvider._getUploadAndValidateModelRequestMethodDescriptor();
+
+        const UploadInput = this.TrainingModelProvider._getUploadInputMethodDescriptor()
+
+        return new Promise((resolve, reject) => {
+            let call;
+            const fileStream = fs.createReadStream(filepath, {
+                highWaterMark: batchSize
+            });
+            let batchNumber = 0;
+
+            const baseRequest = new UploadAndValidateModelRequest();
+            const baseUploadInput = new UploadInput();
+            baseUploadInput.setModelId(params.modelId)
+            baseUploadInput.setData(fileData)
+            baseUploadInput.setFileName(fileName)
+            baseUploadInput.setFileSize(fileSize)
+            baseUploadInput.setBatchSize(batchSize)
+            baseUploadInput.setBatchNumber(batchNumber)
+            baseUploadInput.setBatchCount(batchCount)
+            baseRequest.setUploadInput(baseUploadInput);
+            baseRequest.setAuthorization(authorizationRequest);
+
+            call = this._modelServiceClient.upload_and_validate(paymentMetadata, baseRequest, (err, response) => {
+                if (err) {
+                    console.error('Upload and validate error:', err);
+                    return reject(err);
+                }
+                const status = serviceStatus[response.getStatus()];
+                resolve(status);
+            });
+            fileStream.on('open', () => {
+                console.log('The file stream is open');
+            });
+            fileStream.on('error', (err) => {
+                console.error('File opening error:', err);
+            });
+            fileStream.on('end', () => {
+                console.log('The file stream is complete');
+                call.end();
+            });
+            fileStream.on('data', chunk => {
+                batchNumber++;
+                const chunkRequest = new UploadAndValidateModelRequest();
+                const chunkUploadInput = new UploadInput();
+                chunkUploadInput.setModelId(params.modelId)
+                chunkUploadInput.setData(chunk)
+                chunkUploadInput.setFileName(fileName)
+                chunkUploadInput.setFileSize(fileSize)
+                chunkUploadInput.setBatchSize(batchSize)
+                chunkUploadInput.setBatchNumber(batchNumber)
+                chunkUploadInput.setBatchCount(batchCount)
+                chunkRequest.setUploadInput(baseUploadInput);
+                chunkRequest.setAuthorization(authorizationRequest);
+                call.write(chunkRequest);
+                console.log(`Chunk number ${batchNumber}/${batchCount} has been sent – ${chunk.length} bytes`);
+            });
+        });
+    }
+
     async createModel(params) {
-        const request = await this._trainingCreateModel(address, params);
+        const request = await this._createModelRequest(params);
         return new Promise((resolve, reject) => {
             this._modelServiceClient.create_model(request, (err, response) => {
-                debug(`create model ${err} ${response}`);
+                logMessage('debug', 'TrainingProvider', `create model ${err} ${response}`);
                 if (err) {
                     reject(err);
                 } else {
-                    const modelDetails = response.getModelDetails();
-
                     const data = {
-                        modelId: modelDetails.getModelId(),
-                        methodName: modelDetails.getGrpcMethodName(),
-                        serviceName: modelDetails.getGrpcServiceName(),
-                        description: modelDetails.getDescription(),
-                        status: modelDetails.getStatus(),
-                        updatedDate: modelDetails.getUpdatedDate(),
-                        accessAddressList: modelDetails.getAddressListList(),
-                        modelName: modelDetails.getModelName(),
-                        publicAccess: modelDetails.getIsPubliclyAccessible(),
-                        dataLink: modelDetails.getTrainingDataLink(),
+                        addressList: response.getAddressListList(),
+                        description: response.getDescription(),
+                        isPublic: response.getIsPublic(),
+                        modelId: response.getModelId(),
+                        modelName: response.getName(),
+                        status: serviceStatus[response.getStatus()],
+                        updatedDate: response.getUpdatedDate(),
+                        serviceName: response.getGrpcServiceName(),
+                        methodName: response.getGrpcMethodName()
                     };
                     resolve(data);
                 }
@@ -219,152 +472,98 @@ class TrainingProvider {
         });
     }
 
-    /**
-     * Generate request for creating new model
-     * @param {{address: string, modelName: string, grpcMethod: string, grpcServiceName: string, description: string, publicAccess: boolean, accessAddressList: string[], dataLink: string, orgId: string, serviceId: string, groupId: string}} params - The params for generate request
-     * @private
-     */
-    async _trainingCreateModel(params) {
+    async _createModelRequest(params) {
         const message = TRANSACTIONS_MESSAGE.CREATE_MODEL;
-        const ModelStateRequest =
-            this.TrainingModelProvider._getCreateModelRequestMethodDescriptor();
+        const authorizationRequest = await this._getSignedAuthorizationRequest(params.address, message);
+
+        const ModelStateRequest = this.TrainingModelProvider._getCreateModelRequestMethodDescriptor();
         const modelStateRequest = new ModelStateRequest();
 
-        const ModelDetailsRequest =
-            this.TrainingModelProvider._getModelDetailsRequestMethodDescriptor();
-        const modelDetailsRequest = new ModelDetailsRequest();
+        const NewModelRequest = this.TrainingModelProvider._getNewModelRequestMethodDescriptor();
+        const newModelRequest = new NewModelRequest();
 
-        const authorizationRequest = await this._formAuthorizationRequest(
-            message,
-            params.address
-        );
-        modelDetailsRequest.setModelName(params.modelName);
-        modelDetailsRequest.setGrpcMethodName(params.grpcMethod);
-        modelDetailsRequest.setGrpcServiceName(params.grpcServiceName);
-        modelDetailsRequest.setDescription(params.description);
-        modelDetailsRequest.setIsPubliclyAccessible(params.publicAccess);
-        modelDetailsRequest.setAddressListList(params.accessAddressList);
-        modelDetailsRequest.setTrainingDataLink(params.dataLink);
-
-        modelDetailsRequest.setOrganizationId(params.orgId);
-        modelDetailsRequest.setServiceId(params.serviceId);
-        modelDetailsRequest.setGroupId(params.groupId);
-
+        newModelRequest.setName(params.modelName);
+        newModelRequest.setGrpcMethodName(params.grpcMethod);
+        newModelRequest.setGrpcServiceName(params.serviceName);
+        newModelRequest.setDescription(params.description);
+        newModelRequest.setIsPublic(params.isPublic);
+        newModelRequest.setAddressListList(params.addressList);
         modelStateRequest.setAuthorization(authorizationRequest);
-        modelStateRequest.setModelDetails(modelDetailsRequest);
+        modelStateRequest.setModel(newModelRequest);
         return modelStateRequest;
     }
 
-    /**
-     * Delete a model
-     * @param {{address: string,modelId: string, grpcMethod: string, grpcServiceName: string}} params - The params for generate request
-     * @public
-     */
     async deleteModel(params) {
-        const request = await this._trainingDeleteModel(params);
+        const request = await this._deleteModelRequest(params);
         return new Promise((resolve, reject) => {
             this._modelServiceClient.delete_model(request, (err, response) => {
-                debug(`delete model ${err} ${response}`);
+                logMessage('debug', 'TrainingProvider', `delete model ${err} ${response}`);
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(response);
+                    const status = serviceStatus[response.getStatus()];
+                    resolve(status);
                 }
             });
         });
     }
 
-    /**
-     * Generate request for deleting a model
-     * @param {{address: string,modelId: string, grpcMethod: string, grpcServiceName: string}} params - The params for generate request
-     * @private
-     */
-    async _trainingDeleteModel(params) {
+    async _deleteModelRequest(params) {
         const message = TRANSACTIONS_MESSAGE.DELETE_MODEL;
-        const authorizationRequest = await this._formAuthorizationRequest(
-            message,
-            params.address
-        );
+        const authorizationRequest = await this._getSignedAuthorizationRequest(params.address, message);
 
-        const ModelStateRequest =
-            this.TrainingModelProvider._getUpdateModelRequestMethodDescriptor();
+        const ModelStateRequest = this.TrainingModelProvider._getDeleteModelRequestMethodDescriptor();
         const modelStateRequest = new ModelStateRequest();
 
-        const ModelDetailsRequest =
-            this.TrainingModelProvider._getModelDetailsRequestMethodDescriptor();
-        const modelDetailsRequest = new ModelDetailsRequest();
-
-        modelDetailsRequest.setModelId(params.modelId);
-        modelDetailsRequest.setGrpcMethodName(params.grpcMethod);
-        modelDetailsRequest.setGrpcServiceName(params.grpcServiceName);
-
         modelStateRequest.setAuthorization(authorizationRequest);
-        modelStateRequest.setUpdateModelDetails(modelDetailsRequest);
+        modelStateRequest.setModelId(params.modelId);
         return modelStateRequest;
     }
 
-    /**
-     * Update a model
-     * @param {{address: string, modelName: string, modelId: string, grpcMethod: string, grpcServiceName: string, description: string, publicAccess: boolean, accessAddressList: string[], dataLink: string, orgId: string, serviceId: string, groupId: string}} params - The params for generate request
-     * @public
-     */
     async updateModel(params) {
-        const request = await this._trainingUpdateModel(params);
+        const request = await this._updateModelRequest(params);
         return new Promise((resolve, reject) => {
-            this._modelServiceClient.update_model_access(
-                request,
-                (err, response) => {
-                    debug(`update model ${err} ${response}`);
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(response);
-                    }
+            this._modelServiceClient.update_model(request, (err, response) => {
+                logMessage('debug', 'TrainingProvider', `update model ${err} ${response}`);
+                if (err) {
+                    reject(err);
+                } else {
+                    const updatedModel = this._parseModelDetails(response)
+                    resolve(updatedModel);
                 }
-            );
+            });
         });
     }
 
-    /**
-     * Generate request for updating a model
-     * @param {{address: string, modelName: string, modelId: string, grpcMethod: string, grpcServiceName: string, description: string, publicAccess: boolean, accessAddressList: string[], dataLink: string, orgId: string, serviceId: string, groupId: string}} params - The params for generate request
-     * @private
-     */
-    async _trainingUpdateModel(params) {
+    async _updateModelRequest(params) {
         const message = TRANSACTIONS_MESSAGE.UPDATE_MODEL;
-        const ModelStateRequest =
-            this.TrainingModelProvider._getUpdateModelRequestMethodDescriptor();
+        const authorizationRequest = await this._getSignedAuthorizationRequest(params.address, message);
+
+        const ModelStateRequest = this.TrainingModelProvider._getUpdateModelRequestMethodDescriptor();
         const modelStateRequest = new ModelStateRequest();
 
-        const ModelDetailsRequest =
-            this.TrainingModelProvider._getModelDetailsRequestMethodDescriptor();
-        const modelDetailsRequest = new ModelDetailsRequest();
-
-        const authorizationRequest = await this._formAuthorizationRequest(
-            message,
-            params.address
-        );
-
-        modelDetailsRequest.setModelId(params.modelId);
-        modelDetailsRequest.setGrpcMethodName(params.grpcMethod);
-        modelDetailsRequest.setGrpcServiceName(params.grpcServiceName);
-
-        modelDetailsRequest.setModelName(params.modelName);
-        modelDetailsRequest.setDescription(params.description);
-        modelDetailsRequest.setAddressListList(params.addressList);
-        modelDetailsRequest.setIsPubliclyAccessible(params.publicAccess);
-        modelDetailsRequest.setTrainingDataLink(params.dataLink);
-        // modelDetailsRequest.setStatus(params.status);
-        // modelDetailsRequest.setUpdatedDate(params.updatedDate);
-
-        modelDetailsRequest.setOrganizationId(params.orgId);
-        modelDetailsRequest.setServiceId(params.serviceId);
-        modelDetailsRequest.setGroupId(params.groupId);
-
         modelStateRequest.setAuthorization(authorizationRequest);
-        modelStateRequest.setUpdateModelDetails(modelDetailsRequest);
+        modelStateRequest.setModelId(params.modelId);
+
+        if (params.modelName) {
+            modelStateRequest.setModelName(params.modelName);
+        }
+
+        if (params.description) {
+            modelStateRequest.setDescription(params.description);
+        }
+
+        if (params.addressList && Array.isArray(params.addressList)) {
+            modelStateRequest.setAddressListList(params.addressList);
+        }
+
         return modelStateRequest;
     }
+
+    _generateTrainingPaymentMetadata() {
+        logger.error('_generateTrainingPaymentMetadata must be implemented in the sub classes');
+    }
+
 }
 
 export default TrainingProvider;
