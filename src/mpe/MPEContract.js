@@ -8,8 +8,11 @@ import {BigNumber} from "bignumber.js";
 
 class MPEContract {
     /**
-     * @param {Web3} web3
-     * @param {number} networkId
+     * @param {Web3} web3 - Web3 instance
+     * @param {number} networkId - Network ID
+     * @param {string} rpcEndpoint - RPC endpoint URL
+     * @param {string} tokenName - Token name (FET/AGIX)
+     * @param {string} standType - Stand type
      */
     constructor(web3, networkId, rpcEndpoint, tokenName, standType) {
         this._web3 = web3;
