@@ -1,4 +1,4 @@
-import {serviceStatus, TRANSACTIONS_MESSAGE, UNIFIED_SIGN_EXPIRY} from '../constants/TrainingConstants';
+import {serviceStatus, TRANSACTIONS_MESSAGE, UNIFIED_SIGN_EXPIRY} from './TrainingConstants';
 import {logMessage} from '../utils/logger';
 import fs from 'fs'
 import path from "path";

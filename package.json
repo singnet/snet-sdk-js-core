@@ -1,6 +1,6 @@
 {
   "name": "snet-sdk-core",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "SingularityNET core SDK for JS",
   "keywords": [
     "snet-sdk",
@@ -40,11 +40,12 @@
     "singularitynet-token-contracts": "3.1.0"
   },
   "exports": {
-    "./constants/*": "./dist/src/constants/*.js",
-    "./mpe/*": "./dist/src/mpe/*.js",
-    "./paymentStrategies/*": "./dist/src/paymentStrategies/*.js",
-    "./training/*": "./dist/src/training/*.js",
-    "./utils/*": "./dist/src/utils/*.js"
+    ".": "./dist/index.js",
+    "./constants/*": "./dist/constants/*.js",
+    "./mpe/*": "./dist/mpe/*.js",
+    "./paymentStrategies/*": "./dist/paymentStrategies/*.js",
+    "./training/*": "./dist/training/*.js",
+    "./utils/*": "./dist/utils/*.js"
   },
   "peerDependencies": {
     "lodash": "4.17.21",
