@@ -1,4 +1,5 @@
 import BigNumber from "bignumber.js";
+import { isNaN } from "lodash";
 
 export const TOKEN_NAMES = {
     FET: "FET",
@@ -10,10 +11,36 @@ const TOKEN_DECIMALS = {
     [TOKEN_NAMES.AGIX]: 8,
 };
 
-const getTokenPrecision = (tokenName) => {
-    if (!TOKEN_DECIMALS.hasOwnProperty(tokenName)) {
-        throw new Error(`Unsupported token: ${tokenName}. Valid options: ${Object.keys(TOKEN_DECIMALS).join(', ')}`);
+/**
+ * Validates token name
+ * @private
+ * @param {*} value 
+ * @throws {Error} When value is invalid
+ */
+const validateTokenName = (value) => {
+    if (!TOKEN_DECIMALS.hasOwnProperty(value)) {
+        throw new Error(`Unsupported token: ${value}. Valid options: ${Object.keys(TOKEN_DECIMALS).join(', ')}`);
     }
+}
+
+/**
+ * Validates input value
+ * @param {*} value 
+ * @throws {Error} When value is invalid
+ */
+const validateInput = (value) => {
+    if (value === null || value === undefined || value === '' || isNaN(value)) {
+        throw new Error('Amount must be a valid number');
+    }
+}
+
+/**
+ * Gets token precision info
+ * @param {string} tokenName - Token name (FET/AGIX)
+ * @returns {{precision: BigNumber, decimals: number}}
+ */
+const getTokenPrecision = (tokenName) => {
+    validateTokenName(tokenName);
 
     const decimals = TOKEN_DECIMALS[tokenName];
     return {
@@ -30,9 +57,7 @@ const getTokenPrecision = (tokenName) => {
  * @throws {Error} On invalid inputs
  */
 export const cogsToToken = (cogs, tokenName) => {
-    if (!cogs || isNaN(cogs)) {
-        throw new Error('Cogs value must be a valid number');
-    }
+    validateInput(cogs);
 
     const { precision, decimals } = getTokenPrecision(tokenName);
     return new BigNumber(cogs)
@@ -48,9 +73,7 @@ export const cogsToToken = (cogs, tokenName) => {
  * @throws {Error} On invalid inputs
  */
 export const tokenToCogs = (tokenAmount, tokenName) => {
-    if (!tokenAmount || isNaN(tokenAmount)) {
-        throw new Error('Token amount must be a valid number');
-    }
+    validateInput(tokenAmount);
 
     const { precision } = getTokenPrecision(tokenName);
     return new BigNumber(tokenAmount)
@@ -66,9 +89,7 @@ export const tokenToCogs = (tokenAmount, tokenName) => {
  * @throws {Error} On invalid inputs
  */
 export const formatTokenDecimal = (tokenAmount, tokenName) => {
-    if (!tokenAmount || isNaN(tokenAmount)) {
-        throw new Error('Token amount must be a valid number');
-    }
+    validateInput(tokenAmount);
 
     const { decimals } = getTokenPrecision(tokenName);
     return new BigNumber(tokenAmount)

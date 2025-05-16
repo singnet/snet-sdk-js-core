@@ -39,6 +39,13 @@
     "singularitynet-platform-contracts": "2.1.0",
     "singularitynet-token-contracts": "3.1.0"
   },
+  "exports": {
+    "./constants/*": "./dist/src/constants/*.js",
+    "./mpe/*": "./dist/src/mpe/*.js",
+    "./paymentStrategies/*": "./dist/src/paymentStrategies/*.js",
+    "./training/*": "./dist/src/training/*.js",
+    "./utils/*": "./dist/src/utils/*.js"
+  },
   "peerDependencies": {
     "lodash": "4.17.21",
     "web3": "4.16.0"
