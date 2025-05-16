@@ -4,7 +4,7 @@ import { isEmpty } from 'lodash';
 import Account from './Account';
 import MPEContract from './mpe/MPEContract';
 import IPFSMetadataProvider from './IPFSMetadataProvider';
-import { DefaultPaymentStrategy } from './payment_strategies';
+import { DefaultPaymentStrategy } from './paymentStrategies';
 import { setLevel } from 'loglevel';
 import { logMessage } from './utils/logger';
 import { DEFAULT_CONFIG, validateConfig } from './utils/configHelper';
