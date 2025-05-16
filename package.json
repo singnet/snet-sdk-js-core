@@ -1,6 +1,6 @@
 {
   "name": "snet-sdk-core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "SingularityNET core SDK for JS",
   "keywords": [
     "snet-sdk",
