@@ -6,7 +6,9 @@ import { logMessage } from './utils/logger';
 
 class ServiceMetadataProvider {
     constructor(orgId, serviceId, metadata, mpeContract, group, options = {}) {
-        this._metadata = { orgId, serviceId, ...metadata };
+        const { serviceMetadata, orgMetadata } = metadata;
+        this._serviceMetadata = { orgId, serviceId, ...serviceMetadata };
+        this._orgMetadata = orgMetadata;
         this._mpeContract = mpeContract;
         this._group = this.enhanceGroupInfo(group);
         this._options = options;
@@ -36,8 +38,12 @@ class ServiceMetadataProvider {
     /**
      * @type {ServiceMetadataProvider}
      */
-    get metadata() {
-        return this._metadata;
+    get serviceMetadata() {
+        return this._serviceMetadata;
+    }
+
+    get organizationMetadata() {
+        return this._orgMetadata;
     }
 
     /**
@@ -62,8 +68,8 @@ class ServiceMetadataProvider {
      */
     getServiceDetails() {
         return {
-            orgId: this._metadata.orgId,
-            serviceId: this._metadata.serviceId,
+            orgId: this._serviceMetadata.orgId,
+            serviceId: this._serviceMetadata.serviceId,
             groupId: this._group.group_id,
             groupIdInBytes: this._group.group_id_in_bytes,
             daemonEndpoint: this._getServiceEndpoint(),
@@ -133,7 +139,7 @@ class ServiceMetadataProvider {
             };
             return metadataGenerator.generateMetadata(metadataValues);
         } catch (error) {
-            throw new Error('fetching payment metadata error: ', error);
+            throw new Error('fetching payment service metadata error: ', error);
         }
     }
 
