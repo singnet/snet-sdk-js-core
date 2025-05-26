@@ -5,7 +5,7 @@ import Account from './Account';
 import MPEContract from './mpe/MPEContract';
 import IPFSMetadataProvider from './IPFSMetadataProvider';
 import { DefaultPaymentStrategy } from './paymentStrategies';
-import { setLevel } from 'loglevel';
+import { setLevel as setLogLevel} from 'loglevel';
 import { logMessage } from './utils/logger';
 import { DEFAULT_CONFIG, validateConfig } from './utils/configHelper';
 
@@ -20,7 +20,7 @@ class SnetSDK {
             ...DEFAULT_CONFIG,
             ...config,
         };
-        setLevel(this._config.logLevel);
+        setLogLevel(this._config.logLevel);
         const options = {
             defaultGas: this._config.defaultGasLimit,
             defaultGasPrice: this._config.defaultGasPrice,
