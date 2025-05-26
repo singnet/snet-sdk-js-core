@@ -54,9 +54,6 @@ export const validateConfig = (config) => {
         throw new Error(`Token must be one of: ${validTokenNames.join(", ")}`)
     }
 
-    // if (!config?.web3Provider) {
-    //     throw new Error('Web3 provider is required');
-    // }
     const numberNetworkId = Number(config.networkId);
     if (!numberNetworkId) {
         throw new Error('Network ID must be a number');
