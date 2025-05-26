@@ -25,7 +25,7 @@ export default class IPFSMetadataProvider {
      * @param {string} serviceId
      * @returns {Promise.<ServiceMetadata>}
      */
-    async metadata(orgId, serviceId) {
+    async getMetadata(orgId, serviceId) {
         logMessage('debug', 'MetadataProvider', `Fetching service metadata [org: ${orgId} | service: ${serviceId}]`);
 
         let orgIdBytes = this._web3.utils.fromAscii(orgId);
@@ -118,7 +118,7 @@ export default class IPFSMetadataProvider {
             };
         });
 
-        return { ...serviceMetadata, groups };
+        return { serviceMetadata: {...serviceMetadata, groups}, orgMetadata };
     }
 
     _getStorageInfoFromURI(metadataURI) {
