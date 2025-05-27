@@ -16,25 +16,25 @@ class FreeCallPaymentStrategy {
         this._freeCallStateMethodDescriptor = undefined; // must be implemented as subclass property
         this._freeCallTokenMethodDescriptor = undefined; // must be implemented as subclass property
         this.metadataGenerator = new FreecallMetadataGenerator();
+        this._freeCallToken = { token: "", tokenExpirationBlock: "" };
     }
 
     /**
      * Get the metadata for the gRPC free-call
-     * @returns {Promise<({'snet-free-call-auth-token-bin': FreeCallConfig.tokenToMakeFreeCall}|{'snet-free-call-token-expiry-block': *}|{'snet-payment-type': string}|{'snet-free-call-user-id': *}|{'snet-current-block-number': *})[]>}
+     * @returns {Promise<({'snet-free-call-auth-token-bin': FreeCallConfig.tokenToMakeFreeCall}|{'snet-payment-type': string}|{'snet-free-call-user-id': *}|{'snet-current-block-number': *})[]>}
      */
     async getPaymentMetadata() {
         const {address} = await this._getNecessaryFieldsForGetFreeCallsAvailable();
-        const tokenWithExpiration = await this._getFreeCallsTokenWithExpiration(address);
+        await this._updateFreeCallsToken(address);
 
         const currentBlockNumber = await this._account.getCurrentBlockNumber();
-        const signature = await this._generateSignature(address, currentBlockNumber, tokenWithExpiration.tokenHex, tokenWithExpiration.tokenExpirationBlock);
-        const tokenBytes = hexStringToBytes(tokenWithExpiration.tokenHex);
+        const signature = await this._generateSignature(address, currentBlockNumber, this._freeCallToken.token, this._freeCallToken.tokenExpirationBlock);
+        const tokenBytes = hexStringToBytes(this._freeCallToken.token);
         const metadataFields = {
             type: "free-call",
             userAddress: address,
             currentBlockNumber,
             freecallAuthToken: tokenBytes,
-            freecallTokenExpiryBlock: tokenWithExpiration.tokenExpirationBlock,
             signatureBytes: signature,
         };
 
@@ -46,50 +46,101 @@ class FreeCallPaymentStrategy {
         const address = await this._account.getAddress();
         return { address };
     }
-    _getFreeCallsTokenWithExpirationRequest(address) {
+
+    async _getFreeCallsTokenWithExpirationRequest(address) {
         logMessage('debug', 'FreeCallPaymentStrategy', `creating free call token request for address=${address}`);
-        const request = new this._freeCallTokenMethodDescriptor.requestType();
+        const request = new this._freeCallTokenMethodDescriptor.requestType(); 
+        const currentBlockNumber = await this._account.getCurrentBlockNumber();
+         const signature = await this._generateSignature(
+            address,
+            currentBlockNumber
+        );
         request.setAddress(address);
+        request.setCurrentBlock(Number(currentBlockNumber));
+        request.setSignature(signature)
         return request;
     }
-    async _getFreeCallsTokenWithExpiration(address) {
-        const request = this._getFreeCallsTokenWithExpirationRequest(address);
+
+    async _updateFreeCallsToken(address) {
+        const currentBlockNumber = await this._account.getCurrentBlockNumber();
+        if (this._freeCallToken.token && this._freeCallToken.tokenExpirationBlock > currentBlockNumber) {
+            return
+        }
+        const request = await this._getFreeCallsTokenWithExpirationRequest(address);
         const tokenWithExpirationResponse = await wrapRpcToPromise(
         this._freeCallStateServiceClient, "getFreeCallToken", request);
-        const token = tokenWithExpirationResponse.getToken(); //INFO: not used
+        // const token = tokenWithExpirationResponse.getToken(); //INFO: not used
         const tokenHex = tokenWithExpirationResponse.getTokenHex();
         const tokenExpirationBlock = tokenWithExpirationResponse.getTokenExpirationBlock();
-        return { token, tokenHex, tokenExpirationBlock };
+        this._freeCallToken = { token: tokenHex, tokenExpirationBlock };
     }
 
     /**
-     *
-     * @returns {Promise<Bytes<Signature>>>}
+     * Generates a signature for free call authentication
+     * @param {string} address - User's blockchain address
+     * @param {number|string} currentBlockNumber - Current blockchain block number
+     * @param {string} [tokenToMakeFreeCall] - Optional token for enhanced free calls
+     * @returns {Promise<Bytes<Signature>>} The generated signature
+     * @throws {Error} If required parameters are invalid or signing fails
      * @private
      */
-    async _generateSignature(address, currentBlockNumber, tokenToMakeFreeCall, tokenExpiryDateBlock) {
-        logMessage('debug', 'FreeCallPaymentStrategy', `generating signature`);
-        const { orgId, serviceId, groupId } = this._serviceMetadata.getServiceDetails();
+    async _generateSignature(address, currentBlockNumber, tokenToMakeFreeCall) {
+        logMessage('debug', 'FreeCallPaymentStrategy', 'Generating free call signature', {
+            address,
+            currentBlockNumber,
+            hasToken: !!tokenToMakeFreeCall
+        });
 
-        const enhancedToken = /^0x/.test(tokenToMakeFreeCall.toLowerCase()) ? tokenToMakeFreeCall.substring(2, tokenToMakeFreeCall.length) : tokenToMakeFreeCall;
-        return this._account.signData(
+        const { orgId, serviceId, groupId } = this._serviceMetadata.getServiceDetails();
+        if (!orgId || !serviceId || !groupId) {
+            throw new Error('Missing service metadata details');
+        }
+
+        const baseData = [
             { t: "string", v: "__prefix_free_trial" },
             { t: "string", v: address },
+            { t: "string", v: "" }, // TODO: user_id field. Add the mode to working with marketplace and fill this
             { t: "string", v: orgId },
             { t: "string", v: serviceId },
             { t: "string", v: groupId },
-            { t: "uint256", v: currentBlockNumber },
-            { t: "bytes", v: enhancedToken }
-        );
+            { t: "uint256", v: currentBlockNumber }
+        ];
+
+        if (tokenToMakeFreeCall) {
+            const normalizedToken = this._normalizeFreeCallToken(tokenToMakeFreeCall);
+            baseData.push({ t: "bytes", v: normalizedToken });
+        }
+
+        try {
+            return await this._account.signData(...baseData);
+        } catch (error) {
+            logMessage('error', 'FreeCallPaymentStrategy', 'Signature generation failed', { error });
+            throw new Error(`Failed to generate signature: ${error.message}`);
+        }
     }
 
-    async _getFreeCallStateRequestProperties(address, tokenWithExpiration) {
+    /**
+     * Normalizes free call token format
+     * @param {string} token - The input token
+     * @returns {string} Normalized token without 0x prefix
+     * @private
+     */
+    _normalizeFreeCallToken(token) {
+        if (typeof token !== 'string') {
+            throw new Error('Token must be a string');
+        }
+        return token.toLowerCase().startsWith('0x') 
+            ? token.substring(2) 
+            : token;
+    }
+
+    async _getFreeCallStateRequestProperties(address) {
         const currentBlockNumber = await this._account.getCurrentBlockNumber();
+        await this._updateFreeCallsToken(address);
         const signature = await this._generateSignature(
             address,
             currentBlockNumber,
-            tokenWithExpiration.tokenHex,
-            tokenWithExpiration.tokenExpirationBlock
+            this._freeCallToken.token
         );
         return {
             signature,
@@ -101,14 +152,14 @@ class FreeCallPaymentStrategy {
      * @returns {FreeCallStateRequest}
      * @private
      */
-    async _getFreeCallStateRequest(address, tokenWithExpiration) {
+    async _getFreeCallStateRequest(address) {
         logMessage('debug', 'FreeCallPaymentStrategy', `creating free call request with obtained before token for address=${address}`);
         const request = new this._freeCallStateMethodDescriptor.requestType();
-        const { signature, currentBlockNumber } = await this._getFreeCallStateRequestProperties(address, tokenWithExpiration);
-        const tokenBytes = hexStringToBytes(tokenWithExpiration.tokenHex);
-        request.setUserAddress(address);
-        request.setTokenForFreeCall(tokenBytes);
-        request.setTokenExpiryDateBlock(tokenWithExpiration.tokenExpirationBlock);
+        
+        const { signature, currentBlockNumber } = await this._getFreeCallStateRequestProperties(address);
+        const tokenBytes = hexStringToBytes(this._freeCallToken.token);
+        request.setAddress(address);
+        request.setFreeCallToken(tokenBytes);
         request.setSignature(signature);
         request.setCurrentBlock(currentBlockNumber);
 
@@ -117,11 +168,10 @@ class FreeCallPaymentStrategy {
     /**
      * helper. get avaliable number of free calls for user
      * @param {*} address user wallet address (metamask, for example)
-     * @param {*} tokenWithExpiration token required to get free calls previously got from daemon
      * @returns {Promise<number>} number of avaliable free calls
      */
-    async _getFreeCallsAvaliableWithFreeCallsToken(address, tokenWithExpiration) {
-        const request = await this._getFreeCallStateRequest(address, tokenWithExpiration);
+    async _getFreeCallsAvaliableWithFreeCallsToken(address) {
+        const request = await this._getFreeCallStateRequest(address);
         const response = await wrapRpcToPromise(this._freeCallStateServiceClient, "getFreeCallsAvailable", request);
         const avaliableFreeCalls = response.getFreeCallsAvailable();
         return avaliableFreeCalls;
@@ -135,8 +185,8 @@ class FreeCallPaymentStrategy {
      */
     async getFreeCallsAvailable() {
         const { address } = await this._getNecessaryFieldsForGetFreeCallsAvailable();
-        const tokenWithExpiration = await this._getFreeCallsTokenWithExpiration(address);
-        const avaliableFreeCalls = await this._getFreeCallsAvaliableWithFreeCallsToken(address, tokenWithExpiration);
+        await this._updateFreeCallsToken(address);
+        const avaliableFreeCalls = await this._getFreeCallsAvaliableWithFreeCallsToken(address);
         return avaliableFreeCalls;
     }
 

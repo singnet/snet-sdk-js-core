@@ -93,10 +93,6 @@ export class FreecallMetadataGenerator extends MetadataGenerator {
                 header: 'snet-free-call-auth-token-bin',
                 value: metadata?.freecallAuthToken?.toString('base64'),
             },
-            freecallTokenExpiryBlock: {
-                header: 'snet-free-call-token-expiry-block',
-                value: metadata?.freecallTokenExpiryBlock,
-            },
             signatureBytes: {
                 header: 'snet-payment-channel-signature-bin',
                 value: metadata?.signatureBytes?.toString('base64'),
