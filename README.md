@@ -2,7 +2,11 @@
 SingularityNET SDK core for JavaScript
   
 ## Getting Started
-This package provides the core functionality for interacting with the AI service daemon, handling connections, and managing payment strategies. It serves as the common foundation for both [Node.js](https://github.com/singnet/snet-sdk-node) and [Web](https://github.com/singnet/snet-sdk-web) JavaScript SDKs.
+This package provides the **core** functionality for interacting with the AI service daemon, handling connections, and managing payment strategies. It serves as the common foundation for both [Node.js](https://github.com/singnet/snet-sdk-node) and [Web](https://github.com/singnet/snet-sdk-web) JavaScript SDKs.
+
+- **`core` – The main SDK functionality.**
+- `nodeJS` – Node.js-specific implementations.
+- `web` – Web (browser) integrations.
 
 ## Features
 - Daemon Connection Management: Establish and maintain connections with the AI service daemon
@@ -70,12 +74,6 @@ Testing: Verify each payment strategy works in your target environment
 Type Safety: Use TypeScript interfaces for method descriptors
 
 ## Development
-The SNET JS SDK consists of three packages:
-
-- `core` – The main SDK functionality.
-- `nodeJS` – Node.js-specific implementations.
-- `web` – Web (browser) integrations.
-
 ### Working on the Core Package
 If you're making changes to the core package, you should test its compatibility with both the `web` and `nodeJS` packages. Here's how:
 
