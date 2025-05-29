@@ -45,6 +45,18 @@ export class PaymentMetadataGenerator extends MetadataGenerator {
     }
 }
 
+export class TrainingPaymentMetadataGenerator extends PaymentMetadataGenerator {
+    getMetadataFields(metadata) {
+        return {
+            ...super.getMetadataFields(metadata),
+            modelId: {
+                header: 'snet-train-model-id',
+                value: metadata.modelId,
+            },
+        }
+    }
+}
+
 export class PrepaidMetadataGenerator extends MetadataGenerator {
     getMetadataFields(metadata) {
         return {
@@ -69,9 +81,9 @@ export class FreecallMetadataGenerator extends MetadataGenerator {
     getMetadataFields(metadata) {
         return {
             ...super.getMetadataFields(metadata),
-            userId: {
-                header: 'snet-free-call-user-id',
-                value: metadata?.userId,
+            userAddress: {
+                header: 'snet-free-call-user-address',
+                value: metadata?.userAddress,
             },
             currentBlockNumber: {
                 header: 'snet-current-block-number',
@@ -80,10 +92,6 @@ export class FreecallMetadataGenerator extends MetadataGenerator {
             freecallAuthToken: {
                 header: 'snet-free-call-auth-token-bin',
                 value: metadata?.freecallAuthToken?.toString('base64'),
-            },
-            freecallTokenExpiryBlock: {
-                header: 'snet-free-call-token-expiry-block',
-                value: metadata?.freecallTokenExpiryBlock,
             },
             signatureBytes: {
                 header: 'snet-payment-channel-signature-bin',

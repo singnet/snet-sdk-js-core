@@ -2,21 +2,27 @@ import MPEAbi from 'singularitynet-platform-contracts/abi/MultiPartyEscrow';
 import MPENetworks from 'singularitynet-platform-contracts/networks/MultiPartyEscrow';
 import Web3 from 'web3';
 import PaymentChannel from './PaymentChannel';
-import { toBNString } from '../utils/bignumber_helper';
-import { info, debug } from 'loglevel';
+import { toBNString } from '../utils/bignumberHelper';
+import { logMessage } from '../utils/logger';
+import {BigNumber} from "bignumber.js";
 
 class MPEContract {
     /**
-     * @param {Web3} web3
-     * @param {number} networkId
+     * @param {Web3} web3 - Web3 instance
+     * @param {number} networkId - Network ID
+     * @param {string} rpcEndpoint - RPC endpoint URL
+     * @param {string} tokenName - Token name (FET/AGIX)
+     * @param {string} standType - Stand type
      */
-    constructor(web3, networkId, rpcEndpoint) {
+    constructor(web3, networkId, rpcEndpoint, tokenName, standType) {
         this._web3 = web3;
         this._networkId = networkId;
         this.rpcEndpoint = rpcEndpoint;
+        this._tokenName = tokenName;
+        this._standType = standType;
         this._contract = new this._web3.eth.Contract(
             MPEAbi,
-            MPENetworks[networkId].address
+            MPENetworks[networkId][tokenName][standType].address
         );
     }
 
@@ -93,10 +99,7 @@ class MPEContract {
             group_id_in_bytes: groupId,
         } = group;
 
-        info(
-            `Opening new payment channel [amount: ${amount}, expiry: ${expiryStr}]`,
-            { tags: ['MPE'] }
-        );
+        logMessage('info', 'MPEContract', `Opening new payment channel [amount: ${amount}, expiry: ${expiryStr}]`);
         const openChannelOperation = this.contract.methods.openChannel;
         try {
             const signerAddress = await account.getAddress();
@@ -300,24 +303,19 @@ class MPEContract {
     async getPastOpenChannels(
         account,
         serviceMetadata,
-        group,
-        startingBlockNumber
+        group
     ) {
         try {
-            const fromBlock =
-                startingBlockNumber || (await this._deploymentBlockNumber());
+            const fromBlock = await this._deploymentBlockNumber();
             let contract = this._contract;
             if (this.rpcEndpoint) {
                 const _web3 = new Web3(this.rpcEndpoint);
                 contract = new _web3.eth.Contract(
                     MPEAbi,
-                    MPENetworks[this._networkId].address
+                    MPENetworks[this._networkId][this._tokenName][this._standType].address
                 );
             }
-            debug(
-                `Fetching all payment channel open events starting at block: ${fromBlock}`,
-                { tags: ['MPE'] }
-            );
+            logMessage('debug', 'MPEContract', `Fetching all payment channel open events starting at block: ${fromBlock}`);
 
             const address = await account.getAddress();
             const decodedData = Buffer.from(group.group_id, 'base64').toString(
@@ -359,12 +357,10 @@ class MPEContract {
         try {
             const address = await account.getAddress();
             let currentEscrowBalance = await this.balance(address);
-            currentEscrowBalance = toBNString(currentEscrowBalance);
-            const amountInCogsBNString = toBNString(amountInCogs);
-            if (amountInCogsBNString > currentEscrowBalance) {
-                await account.depositToEscrowAccount(
-                    amountInCogsBNString - currentEscrowBalance
-                );
+            currentEscrowBalance = new BigNumber(currentEscrowBalance);
+            const amountInCogsBN = new BigNumber(amountInCogs);
+            if (amountInCogsBN.isGreaterThan(currentEscrowBalance)) {
+                await account.depositToEscrowAccount(amountInCogsBN.minus(currentEscrowBalance));
             }
         } catch (error) {
             throw new Error('funding escrow account error: ', error);
@@ -373,7 +369,7 @@ class MPEContract {
 
     async _deploymentBlockNumber() {
         try {
-            const { transactionHash } = MPENetworks[this._networkId];
+            const { transactionHash } = MPENetworks[this._networkId][this._tokenName][this._standType];
             const { blockNumber } = await this._web3.eth.getTransactionReceipt(
                 transactionHash
             );

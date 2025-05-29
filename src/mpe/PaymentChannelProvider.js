@@ -1,5 +1,5 @@
-import { debug, info } from 'loglevel';
-import { toBNString } from '../utils/bignumber_helper';
+import { toBNString } from '../utils/bignumberHelper';
+import { logMessage } from '../utils/logger';
 
 class PaymentChannelProvider {
     /**
@@ -58,18 +58,15 @@ class PaymentChannelProvider {
         return channelStateRequest;
     }
 
-    async _getNewlyOpenedChannel(receipt) {
+    async _getNewlyOpenedChannel() {
         try {
             const openChannels = await this.mpeContract.getPastOpenChannels(
                 this.account,
                 this.serviceMetadata,
-                this.group,
-                receipt.blockNumber
+                this.group
             );
             const newPaymentChannel = openChannels[0];
-            info(
-                `New PaymentChannel[id: ${newPaymentChannel.channelId}] opened`
-            );
+            logMessage('info', 'PaymentChannelProvider', `New PaymentChannel[id: ${newPaymentChannel.channelId}] opened`)
             return newPaymentChannel;
         } catch (error) {
             throw new Error('getting newly opened channel error: ', error);
@@ -83,7 +80,6 @@ class PaymentChannelProvider {
      */
     async getChannelState(channelId) {
         const channelStateRequest = await this._channelStateRequest(channelId);
-        console.log('this.ChannelModelProvider: ', this.ChannelModelProvider);
 
         return new Promise((resolve, reject) => {
             const paymentChannelStateServiceClient =
@@ -106,42 +102,44 @@ class PaymentChannelProvider {
      * @returns {Promise.<PaymentChannel[]>}
      */
     async loadOpenChannels() {
-        const currentBlockNumber = await this.account.getCurrentBlockNumber();
         const newPaymentChannels = await this.mpeContract.getPastOpenChannels(
             this.account,
             this.serviceMetadata,
             this.group,
-            this.lastReadBlock
         );
-        debug(
-            `Found ${newPaymentChannels.length} payment channel open events`,
-            { tags: ['PaymentChannel'] }
-        );
+        logMessage('debug', 'PaymentChannelProvider', `Found ${newPaymentChannels.length} payment channel open events`);
         this.paymentChannels = [...this.paymentChannels, ...newPaymentChannels];
-        this.lastReadBlock = currentBlockNumber;
         return this.paymentChannels;
     }
 
+    findPreselectChannel = (paymentChannels, preselectChannelId) =>{ 
+        const preselectChannel = paymentChannels.find(
+            (el) => el.channelId === preselectChannelId
+        );
+        if (preselectChannel) {
+            return preselectChannel;
+        }
+    }
+
     /**
+     * @param preselectChannelId
      * @returns {Promise.<PaymentChannel[]>}
      */
-    async updateChannelStates() {
-        info('Updating payment channel states', {
-            tags: ['PaymentChannel'],
-        });
+    async updateChannelState(preselectChannelId) {
+        logMessage('info', 'PaymentChannelProvider', 'Updating payment channel state')
         const loadedChannels = await this.loadOpenChannels();
-        console.log('loadedChannels: ', loadedChannels);
-
-        const currentChannelStatesPromise = loadedChannels.map(
-            (paymentChannel) => paymentChannel.syncState()
-        );
-        console.log(
-            'currentChannelStatesPromise: ',
-            currentChannelStatesPromise
-        );
-
-        await Promise.all(currentChannelStatesPromise);
         this.paymentChannels = loadedChannels;
+
+        let channel;
+        if (preselectChannelId) {
+            channel = this.findPreselectChannel(loadedChannels, preselectChannelId);
+        } else {
+            channel = loadedChannels[0]
+        }
+
+        if (channel) {
+            await channel.syncState();
+        }
         return loadedChannels;
     }
 
@@ -153,13 +151,13 @@ class PaymentChannelProvider {
      */
     async openChannel(amount, expiry) {
         try {
-            const newChannelReceipt = await this.mpeContract.openChannel(
+            await this.mpeContract.openChannel(
                 this.account,
                 this.group,
                 amount,
                 expiry
             );
-            return this._getNewlyOpenedChannel(newChannelReceipt);
+            return this._getNewlyOpenedChannel();
         } catch (error) {
             throw new Error('opening channel states error: ', error);
         }
@@ -172,14 +170,13 @@ class PaymentChannelProvider {
      */
     async depositAndOpenChannel(amount, expiry) {
         try {
-            const newFundedChannelReceipt =
-                await this.mpeContract.depositAndOpenChannel(
-                    this.account,
-                    this.group,
-                    amount,
-                    expiry
-                );
-            return this._getNewlyOpenedChannel(newFundedChannelReceipt);
+            await this.mpeContract.depositAndOpenChannel(
+                this.account,
+                this.group,
+                amount,
+                expiry
+            );
+            return this._getNewlyOpenedChannel();
         } catch (error) {
             throw new Error(
                 'depositing and opening channel states error: ',

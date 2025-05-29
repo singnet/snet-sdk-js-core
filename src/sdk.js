@@ -4,14 +4,10 @@ import { isEmpty } from 'lodash';
 import Account from './Account';
 import MPEContract from './mpe/MPEContract';
 import IPFSMetadataProvider from './IPFSMetadataProvider';
-import { DefaultPaymentStrategy } from './payment_strategies';
-import { debug, error } from 'loglevel';
-
-const DEFAULT_CONFIG = {
-    defaultGasLimit: 210000,
-    defaultGasPrice: 4700000,
-    ipfsEndpoint: 'http://ipfs.singularitynet.io:80',
-};
+import { DefaultPaymentStrategy } from './paymentStrategies';
+import { setLevel as setLogLevel} from 'loglevel';
+import { logMessage } from './utils/logger';
+import { DEFAULT_CONFIG, validateConfig } from './utils/configHelper';
 
 class SnetSDK {
     /**
@@ -19,10 +15,12 @@ class SnetSDK {
      * @param {IPFSMetadataProvider} metadataProvider
      */
     constructor(config, metadataProvider = undefined) {
+        validateConfig(config);
         this._config = {
             ...DEFAULT_CONFIG,
             ...config,
         };
+        setLogLevel(this._config.logLevel);
         const options = {
             defaultGas: this._config.defaultGasLimit,
             defaultGasPrice: this._config.defaultGasPrice,
@@ -36,11 +34,14 @@ class SnetSDK {
         this._mpeContract = new MPEContract(
             this._web3,
             this._networkId,
-            rpcEndpoint
+            rpcEndpoint,
+            this._config.tokenName,
+            this._config.standType
         );
         this._account = new Account(
             this._web3,
             this._networkId,
+            config.tokenName,
             this._mpeContract,
             identity
         );
@@ -49,7 +50,9 @@ class SnetSDK {
             new IPFSMetadataProvider(
                 this._web3,
                 this._networkId,
-                this._config.ipfsEndpoint
+                this._config.ipfsEndpoint,
+                this._config.tokenName,
+                this._config.standType               
             );
     }
 
@@ -76,7 +79,7 @@ class SnetSDK {
         const group = this._findGroup(serviceMetadata.groups, groupName);
         if (!group) {
             const errorMessage = `Group[name: ${groupName}] not found for orgId: ${orgId} and serviceId: ${serviceId}`;
-            error(errorMessage);
+            logMessage('error', 'SnetSDK', errorMessage)
             throw new Error(errorMessage);
         }
 
@@ -100,15 +103,13 @@ class SnetSDK {
             return this._paymentChannelManagementStrategy;
         }
 
-        debug(
-            'PaymentChannelManagementStrategy not provided, using DefaultPaymentChannelManagementStrategy'
-        );
+        logMessage('debug', 'SnetSDK', 'PaymentChannelManagementStrategy not provided, using DefaultPaymentChannelManagementStrategy')
         // return new DefaultPaymentChannelManagementStrategy(this);
         return new DefaultPaymentStrategy(concurrentCalls);
     }
 
     _createIdentity() {
-        error('_createIdentity must be implemented in the sub classes');
+        logMessage('error', 'SnetSDK', '_createIdentity must be implemented in the sub classes')
     }
 }
 
