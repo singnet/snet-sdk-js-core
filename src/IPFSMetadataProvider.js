@@ -46,7 +46,7 @@ export default class IPFSMetadataProvider {
                 this._enhanceServiceGroupDetails(serviceMetadata, orgMetadata)
             );
         } catch (error) {
-            throw new Error('generating service metadata error: ', error);
+            throw error;
         }
     }
 
@@ -60,7 +60,7 @@ export default class IPFSMetadataProvider {
 
             return this._fetchMetadataFromIpfs(orgMetadataURI);
         } catch (error) {
-            throw new Error('fetching organization metadata error: ', error);
+            throw error;
         }
     }
 
@@ -78,18 +78,20 @@ export default class IPFSMetadataProvider {
         }
     }
 
-    async _fetchMetadataFromIpfs(metadataURI) {
-        let storageInfo = this._getStorageInfoFromURI(metadataURI);
-        let ipfsCID = storageInfo.uri;
-        ipfsCID = ipfsCID.replace(/\0/g, '');
-        logMessage('debug', 'MetadataProvider', `Fetching metadata from IPFS[CID: ${ipfsCID}]`);
-
+    async _fetchMetadataFromIpfs(metadataURI) { 
+        if (metadataURI === "0x") {
+            throw new Error("Metadata is not defined in Registry")
+        }
         try {
+            let storageInfo = this._getStorageInfoFromURI(metadataURI);
+            let storageCID = storageInfo.uri;
+            storageCID = storageCID.replace(/\0/g, '');
+            logMessage('debug', 'MetadataProvider', `Fetching metadata [CID: ${storageCID}]`);
             let fetchUrl;
             if (storageInfo.type === this._storageTypeIpfs) {
-                fetchUrl = `${this._ipfsEndpoint}/api/v0/cat?arg=${ipfsCID}`;
+                fetchUrl = `${this._ipfsEndpoint}/api/v0/cat?arg=${storageCID}`;
             } else {
-                fetchUrl = `${this._lighthouseEndpoint}/${ipfsCID}`;
+                fetchUrl = `${this._lighthouseEndpoint}/${storageCID}`;
             }
             const response = await fetch(fetchUrl);
             if (!response.ok) {
@@ -97,7 +99,7 @@ export default class IPFSMetadataProvider {
             }
             return response.json();
         } catch (error) {
-            logMessage('error', 'MetadataProvider', `Error fetching metadata from IPFS[CID: ${ipfsCID}]`);
+            logMessage('error', 'MetadataProvider', `Error fetching metadata [CID: ${storageCID}] ${error?.message}`);
             throw error;
         }
     }
@@ -128,21 +130,7 @@ export default class IPFSMetadataProvider {
         } else if (decodedUri.startsWith(STORAGE_URL_FILECOIN_PREFIX)) {
             return { type: this._storageTypeFilecoin, uri: decodedUri.replace(this._storageUrlFilecoinPrefix, "") };
         } else {
-            throw new Error(`We support only ${this._storageTypeIpfs} and ${this._storageTypeFilecoin} uri in Registry`);
+            throw new Error(`We support only ${this._storageTypeIpfs} and ${this._storageTypeFilecoin} URI in Registry`);
         }
     }
-
-    // _constructIpfsClient() {
-    //   const {
-    //     protocol = 'http',
-    //     hostname: host,
-    //     port = 5001,
-    //   } = url.parse(this._ipfsEndpoint); // TODO new URL
-    //   const ipfsHostOrMultiaddr = {
-    //     protocol: protocol.replace(':', ''),
-    //     host,
-    //     port,
-    //   };
-    //   return IPFSClient(ipfsHostOrMultiaddr); // TODO find IPFSClient()
-    // }
 }
