@@ -1,4 +1,5 @@
 const OK_CODE = 0;
+
 /**
  * helper function to simplify calls of grpc. Now you can simply use it with try catch block
  * @param {*} serviceClient
@@ -8,17 +9,16 @@ const OK_CODE = 0;
  * @returns { Promise }
  */
 export function wrapRpcToPromise(serviceClient, remoteProcedureName, requestMessage, metadata) {
-  return new Promise((resolve, reject) => {
-    serviceClient[remoteProcedureName](requestMessage, metadata,
-      (error, responseMessage) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(responseMessage);
-        }
-      }
-    );
-  });
+    return new Promise((resolve, reject) => {
+        const opts = metadata || {};
+        serviceClient[remoteProcedureName](requestMessage, opts, (error, responseMessage) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(responseMessage);
+            }
+        });
+    });
 }
 
 function wrapUnaryToPromiseOnEnd(response, resolve, reject) {
@@ -31,12 +31,12 @@ function wrapUnaryToPromiseOnEnd(response, resolve, reject) {
 
     resolve(message);
 }
+
 export function wrapUnaryToPromise(serviceClient, methodDescriptor, props) {
-  return new Promise((resolve, reject) => {
-    props = {
-      ...props,
-      onEnd: (response) => wrapUnaryToPromiseOnEnd(response, resolve, reject),
-    };
-    serviceClient.unary(methodDescriptor, props);
-  });
+    return new Promise((resolve, reject) => {
+        props = {
+            ...props, onEnd: (response) => wrapUnaryToPromiseOnEnd(response, resolve, reject),
+        };
+        serviceClient.unary(methodDescriptor, props);
+    });
 }

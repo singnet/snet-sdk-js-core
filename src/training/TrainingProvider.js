@@ -1,5 +1,5 @@
-import {serviceStatus, TRANSACTIONS_MESSAGE, UNIFIED_SIGN_EXPIRY} from './TrainingConstants';
-import {logMessage} from '../utils/logger';
+import { serviceStatus, TRANSACTIONS_MESSAGE, UNIFIED_SIGN_EXPIRY } from './TrainingConstants';
+import { logMessage } from '../utils';
 import fs from 'fs'
 import path from "path";
 
@@ -138,7 +138,7 @@ class TrainingProvider {
     async getTrainingMetadata() {
         const request = this._trainingMetadataRequest();
         return new Promise((resolve, reject) => {
-            this._modelServiceClient.get_training_metadata(request, (err, response) => {
+            this._modelServiceClient.getTrainingMetadata(request, (err, response) => {
                 if (err) {
                     logMessage('debug', 'TrainingProvider', `get_training_metadata ${err} ${response}`);
                     reject(err);
@@ -248,7 +248,7 @@ class TrainingProvider {
     }
 
     async trainModel(params) {
-        const amount = await this.getTrainModelPrice({...params, isUnifiedSign: true});
+        const amount = await this.getTrainModelPrice({ ...params, isUnifiedSign: true });
         const request = await this._trainModelRequest(params);
         const paymentMetadata = await this._generateTrainingPaymentMetadata(params.modelId, amount);
 
@@ -310,7 +310,7 @@ class TrainingProvider {
     }
 
     async validateModel(params) {
-        const amount = await this.getValidateModelPrice({...params, isUnifiedSign: true});
+        const amount = await this.getValidateModelPrice({ ...params, isUnifiedSign: true });
         const request = await this._validateModelRequest(params);
         const paymentMetadata = await this._generateTrainingPaymentMetadata(params.modelId, amount);
 

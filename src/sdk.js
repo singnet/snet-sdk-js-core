@@ -5,9 +5,8 @@ import Account from './Account';
 import MPEContract from './mpe/MPEContract';
 import IPFSMetadataProvider from './IPFSMetadataProvider';
 import { DefaultPaymentStrategy } from './paymentStrategies';
-import { setLevel as setLogLevel} from 'loglevel';
-import { logMessage } from './utils/logger';
-import { DEFAULT_CONFIG, validateConfig } from './utils/configHelper';
+import { setLevel as setLogLevel } from 'loglevel';
+import { DEFAULT_CONFIG, logMessage, validateConfig } from './utils';
 
 class SnetSDK {
     /**
@@ -52,7 +51,7 @@ class SnetSDK {
                 this._networkId,
                 this._config.ipfsEndpoint,
                 this._config.tokenName,
-                this._config.standType               
+                this._config.standType
             );
     }
 

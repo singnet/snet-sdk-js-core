@@ -1,7 +1,6 @@
 import BigNumber from 'bignumber.js';
-import { toBNString, uint8ArrayToBN } from '../utils/bignumberHelper';
+import { logMessage, toBNString, uint8ArrayToBN } from '../utils';
 import PaymentChannelProvider from './PaymentChannelProvider';
-import { logMessage } from '../utils/logger';
 
 class PaymentChannel {
     /**

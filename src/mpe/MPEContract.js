@@ -2,9 +2,8 @@ import MPEAbi from 'singularitynet-platform-contracts/abi/MultiPartyEscrow';
 import MPENetworks from 'singularitynet-platform-contracts/networks/MultiPartyEscrow';
 import Web3 from 'web3';
 import PaymentChannel from './PaymentChannel';
-import { toBNString } from '../utils/bignumberHelper';
-import { logMessage } from '../utils/logger';
-import {BigNumber} from "bignumber.js";
+import { logMessage, toBNString } from '../utils';
+import { BigNumber } from "bignumber.js";
 
 class MPEContract {
     /**

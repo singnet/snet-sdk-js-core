@@ -2,8 +2,7 @@ import AGIXTokenAbi from 'singularitynet-token-contracts/abi/SingularityNetToken
 import AGIXTokenNetworks from 'singularitynet-token-contracts/networks/SingularityNetToken';
 import FETTokenAbi from 'singularitynet-token-contracts/abi/FetchToken';
 import FETTokenNetworks from 'singularitynet-token-contracts/networks/FetchToken';
-import { toBNString } from './utils/bignumberHelper';
-import { logMessage, stringifyWithBigInt } from './utils/logger';
+import { logMessage, stringifyWithBigInt, toBNString } from './utils';
 
 class Account {
     /**
@@ -93,9 +92,7 @@ class Account {
         try {
             logMessage('debug', 'Account', 'Fetching already approved allowance');
             const address = await this.getAddress();
-            return this.tokenContract.methods
-                .allowance(address, this._mpeContract.address)
-                .call();
+            return this.tokenContract.methods.allowance(address, this._mpeContract.address).call();
         } catch (error) {
             throw new Error('allowance error ', error);
         }
@@ -164,18 +161,18 @@ class Account {
 
     _generateTokenContract() {
         const contractsByToken = {
-          FET: {
-            abi: FETTokenAbi,
-            networks: FETTokenNetworks
-          },
-          AGIX: {
-            abi: AGIXTokenAbi,
-            networks: AGIXTokenNetworks
-          }
+            FET: {
+                abi: FETTokenAbi,
+                networks: FETTokenNetworks
+            },
+            AGIX: {
+                abi: AGIXTokenAbi,
+                networks: AGIXTokenNetworks
+            }
         }
         const tokenContract = contractsByToken[this._token];
         return new this._web3.eth.Contract(tokenContract.abi, tokenContract.networks[this._networkId].address);
-      }
+    }
 
     async _baseTransactionObject(operation, to) {
         try {

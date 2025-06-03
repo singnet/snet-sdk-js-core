@@ -1,8 +1,6 @@
-import { PaymentMetadataGenerator } from './utils/metadataUtils';
+import { logMessage, PaymentMetadataGenerator, toBNString } from './utils';
 import { BigNumber } from 'bignumber.js';
 import { isEmpty } from 'lodash';
-import { toBNString } from './utils/bignumberHelper';
-import { logMessage } from './utils/logger';
 
 class ServiceMetadataProvider {
     constructor(orgId, serviceId, metadata, mpeContract, group, options = {}) {
@@ -13,6 +11,7 @@ class ServiceMetadataProvider {
         this._group = this.enhanceGroupInfo(group);
         this._options = options;
     }
+
     /**
      * @type {boolean}
      */
@@ -144,7 +143,7 @@ class ServiceMetadataProvider {
     }
 
     enhanceGroupInfo(group) {
-        if(isEmpty(group)) {
+        if (isEmpty(group)) {
             return group;
         }
 

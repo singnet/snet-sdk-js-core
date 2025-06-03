@@ -50,7 +50,8 @@
     "./training/*": "./dist/training/*.js",
     "./training": "./dist/training/index.js",
     "./utils/*": "./dist/utils/*.js",
-    "./utils": "./dist/utils/index.js"
+    "./utils": "./dist/utils/index.js",
+    "./ServiceMetadataProvider": "./dist/ServiceMetadataProvider.js"
   },
   "peerDependencies": {
     "lodash": "4.17.21",

@@ -11,14 +11,11 @@ export const DEFAULT_CONFIG = {
 };
 
 const NETWORK_ID = {
-     MAINNET: 1,
-     SEPOLIA: 11155111  
+    MAINNET: 1, SEPOLIA: 11155111
 }
 
 const STAND_TYPES = {
-    PRODUCTION: 'prod',
-    DEMO: 'demo',
-    DEVELOPMENT: 'dev'  
+    PRODUCTION: 'prod', DEMO: 'demo', DEVELOPMENT: 'dev'
 }
 
 const validateStandType = (standType, networkId) => {
@@ -37,12 +34,12 @@ const validateStandType = (standType, networkId) => {
 
 const isValidUrl = (urlString) => {
     try {
-      const url = new URL(urlString);
-      return url.protocol === 'http:' || url.protocol === 'https:';
+        const url = new URL(urlString);
+        return url.protocol === 'http:' || url.protocol === 'https:';
     } catch (err) {
-      return false;
+        return false;
     }
-  };
+};
 
 export const validateConfig = (config) => {
     if (!config || typeof config !== 'object') {

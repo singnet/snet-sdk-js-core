@@ -1,5 +1,6 @@
 import PaymentChannelProvider from '../mpe/PaymentChannelProvider';
-import { logMessage } from '../utils/logger';
+import { logMessage } from '../utils';
+
 const BigNumber = require('bignumber.js');
 
 
@@ -35,7 +36,7 @@ class BasePaidPaymentStrategy {
             this._account,
             this._serviceMetadata
         );
-        
+
         await paymentChannelProvider.updateChannelState(preselectChannelId);
 
         const { paymentChannels } = paymentChannelProvider;

@@ -1,7 +1,13 @@
 import RegistryNetworks from 'singularitynet-platform-contracts/networks/Registry.json';
 import RegistryAbi from 'singularitynet-platform-contracts/abi/Registry.json';
-import { logMessage } from './utils/logger';
-import { LIGHTHOUSE_ENDPOINT, STORAGE_TYPE_FILECOIN, STORAGE_TYPE_IPFS, STORAGE_URL_FILECOIN_PREFIX, STORAGE_URL_IPFS_PREFIX } from './constants/StorageConstants';
+import { logMessage } from './utils';
+import {
+    LIGHTHOUSE_ENDPOINT,
+    STORAGE_TYPE_FILECOIN,
+    STORAGE_TYPE_IPFS,
+    STORAGE_URL_FILECOIN_PREFIX,
+    STORAGE_URL_IPFS_PREFIX
+} from './constants';
 
 export default class IPFSMetadataProvider {
     constructor(web3, networkId, ipfsEndpoint, tokenName, standName) {
@@ -54,9 +60,7 @@ export default class IPFSMetadataProvider {
         logMessage('debug', 'MetadataProvider', 'Fetching org metadata URI from registry contract');
 
         try {
-            const { orgMetadataURI } = await this._registryContract.methods
-                .getOrganizationById(orgIdBytes)
-                .call();
+            const { orgMetadataURI } = await this._registryContract.methods.getOrganizationById(orgIdBytes).call();
 
             return this._fetchMetadataFromIpfs(orgMetadataURI);
         } catch (error) {
@@ -69,9 +73,7 @@ export default class IPFSMetadataProvider {
 
         try {
             const { metadataURI: serviceMetadataURI } =
-                await this._registryContract.methods
-                    .getServiceRegistrationById(orgIdBytes, serviceIdBytes)
-                    .call();
+                await this._registryContract.methods.getServiceRegistrationById(orgIdBytes, serviceIdBytes).call();
             return this._fetchMetadataFromIpfs(serviceMetadataURI);
         } catch (error) {
             throw new Error('fetching service metadata error: ', error);
@@ -118,7 +120,7 @@ export default class IPFSMetadataProvider {
             };
         });
 
-        return { serviceMetadata: {...serviceMetadata, groups}, orgMetadata };
+        return { serviceMetadata: { ...serviceMetadata, groups }, orgMetadata };
     }
 
     _getStorageInfoFromURI(metadataURI) {

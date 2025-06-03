@@ -1,5 +1,5 @@
 import BasePaidPaymentStrategy from './BasePaidPaymentStrategy';
-import { utfStringToBytes } from '../utils/encodingUtils';
+import { utfStringToBytes } from '../utils';
 
 class PrepaidPaymentStrategy extends BasePaidPaymentStrategy {
     /**

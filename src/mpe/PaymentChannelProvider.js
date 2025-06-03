@@ -1,5 +1,4 @@
-import { toBNString } from '../utils/bignumberHelper';
-import { logMessage } from '../utils/logger';
+import { logMessage, toBNString } from '../utils';
 
 class PaymentChannelProvider {
     /**
@@ -112,7 +111,7 @@ class PaymentChannelProvider {
         return this.paymentChannels;
     }
 
-    findPreselectChannel = (paymentChannels, preselectChannelId) =>{ 
+    findPreselectChannel = (paymentChannels, preselectChannelId) => {
         const preselectChannel = paymentChannels.find(
             (el) => el.channelId === preselectChannelId
         );
