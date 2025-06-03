@@ -145,7 +145,7 @@ describe("IPFSMetadataProvider", () => {
 
         // Test unsupported URI
         expect(() => ipfsProvider._getStorageInfoFromURI("unsupportedURI")).toThrow(
-            `We support only ${ipfsProvider._storageTypeIpfs} and ${ipfsProvider._storageTypeFilecoin} uri in Registry`
+            `We support only ${ipfsProvider._storageTypeIpfs} and ${ipfsProvider._storageTypeFilecoin} URI in Registry`
         );
     });
 
