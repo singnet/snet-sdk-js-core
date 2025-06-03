@@ -1,4 +1,4 @@
-import { debug, info, error } from 'loglevel';
+import { debug, error, info } from 'loglevel';
 
 const formatLogMessage = (level, moduleName, message) => {
     const timestamp = new Date().toISOString().replace('T', ' ').split('.')[0];
@@ -25,9 +25,7 @@ export const stringifyWithBigInt = (data) => {
 };
 
 export const VALID_LOG_LEVELS = {
-    debug: debug,
-    info: info,
-    error: error,
+    debug: debug, info: info, error: error,
 };
 
 
@@ -38,7 +36,7 @@ export const VALID_LOG_LEVELS = {
  * @param {string} message - The log message.
  */
 export const logMessage = (level, moduleName, message) => {
-    
+
     const effectiveLevel = VALID_LOG_LEVELS[level] ? level : 'info';
     const formattedMessage = formatLogMessage(effectiveLevel, moduleName, message);
 

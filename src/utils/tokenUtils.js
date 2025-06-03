@@ -2,19 +2,17 @@ import BigNumber from "bignumber.js";
 import { isNaN } from "lodash";
 
 export const TOKEN_NAMES = {
-    FET: "FET",
-    AGIX: "AGIX"
-} 
+    FET: "FET", AGIX: "AGIX"
+}
 
 const TOKEN_DECIMALS = {
-    [TOKEN_NAMES.FET]: 18,
-    [TOKEN_NAMES.AGIX]: 8,
+    [TOKEN_NAMES.FET]: 18, [TOKEN_NAMES.AGIX]: 8,
 };
 
 /**
  * Validates token name
  * @private
- * @param {*} value 
+ * @param {*} value
  * @throws {Error} When value is invalid
  */
 const validateTokenName = (value) => {
@@ -25,7 +23,7 @@ const validateTokenName = (value) => {
 
 /**
  * Validates input value
- * @param {*} value 
+ * @param {*} value
  * @throws {Error} When value is invalid
  */
 const validateInput = (value) => {
@@ -44,8 +42,7 @@ const getTokenPrecision = (tokenName) => {
 
     const decimals = TOKEN_DECIMALS[tokenName];
     return {
-        precision: new BigNumber(10).exponentiatedBy(decimals),
-        decimals: decimals
+        precision: new BigNumber(10).exponentiatedBy(decimals), decimals: decimals
     };
 };
 
@@ -60,13 +57,11 @@ export const cogsToToken = (cogs, tokenName) => {
     validateInput(cogs);
 
     const { precision, decimals } = getTokenPrecision(tokenName);
-    return new BigNumber(cogs)
-        .dividedBy(precision)
-        .toFixed(decimals, BigNumber.ROUND_DOWN);
+    return new BigNumber(cogs).dividedBy(precision).toFixed(decimals, BigNumber.ROUND_DOWN);
 };
 
 /**
- * Converts token to cogs (base units) 
+ * Converts token to cogs (base units)
  * @param {string|number} cogs - Amount in cogs
  * @param {string} tokenName - Token name (FET/AGIX)
  * @returns {string} Formatted token amount
@@ -76,9 +71,7 @@ export const tokenToCogs = (tokenAmount, tokenName) => {
     validateInput(tokenAmount);
 
     const { precision } = getTokenPrecision(tokenName);
-    return new BigNumber(tokenAmount)
-        .multipliedBy(precision)
-        .toFixed(0, BigNumber.ROUND_DOWN); // Cogs should be whole numbers
+    return new BigNumber(tokenAmount).multipliedBy(precision).toFixed(0, BigNumber.ROUND_DOWN); // Cogs should be whole numbers
 };
 
 /**
@@ -92,6 +85,5 @@ export const formatTokenDecimal = (tokenAmount, tokenName) => {
     validateInput(tokenAmount);
 
     const { decimals } = getTokenPrecision(tokenName);
-    return new BigNumber(tokenAmount)
-        .toFixed(decimals, BigNumber.ROUND_DOWN);
+    return new BigNumber(tokenAmount).toFixed(decimals, BigNumber.ROUND_DOWN);
 };

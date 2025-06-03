@@ -1,8 +1,4 @@
-import { toBNString } from "../utils/bignumberHelper";
-import { hexStringToBytes } from "../utils/encodingUtils";
-import { logMessage } from "../utils/logger";
-import { FreecallMetadataGenerator } from "../utils/metadataUtils";
-import { wrapRpcToPromise } from "../utils/protoHelper";
+import { FreecallMetadataGenerator, hexStringToBytes, logMessage, toBNString, wrapRpcToPromise } from "../utils";
 
 class FreeCallPaymentStrategy {
     /**
@@ -24,7 +20,7 @@ class FreeCallPaymentStrategy {
      * @returns {Promise<({'snet-free-call-auth-token-bin': FreeCallConfig.tokenToMakeFreeCall}|{'snet-payment-type': string}|{'snet-free-call-user-id': *}|{'snet-current-block-number': *})[]>}
      */
     async getPaymentMetadata() {
-        const {address} = await this._getNecessaryFieldsForGetFreeCallsAvailable();
+        const { address } = await this._getNecessaryFieldsForGetFreeCallsAvailable();
         await this._updateFreeCallsToken(address);
 
         const currentBlockNumber = await this._account.getCurrentBlockNumber();
@@ -49,9 +45,9 @@ class FreeCallPaymentStrategy {
 
     async _getFreeCallsTokenWithExpirationRequest(address) {
         logMessage('debug', 'FreeCallPaymentStrategy', `creating free call token request for address=${address}`);
-        const request = new this._freeCallTokenMethodDescriptor.requestType(); 
+        const request = new this._freeCallTokenMethodDescriptor.requestType();
         const currentBlockNumber = await this._account.getCurrentBlockNumber();
-         const signature = await this._generateSignature(
+        const signature = await this._generateSignature(
             address,
             currentBlockNumber
         );
@@ -68,8 +64,7 @@ class FreeCallPaymentStrategy {
         }
         const request = await this._getFreeCallsTokenWithExpirationRequest(address);
         const tokenWithExpirationResponse = await wrapRpcToPromise(
-        this._freeCallStateServiceClient, "getFreeCallToken", request);
-        // const token = tokenWithExpirationResponse.getToken(); //INFO: not used
+            this._freeCallStateServiceClient, "getFreeCallToken", request);
         const tokenHex = tokenWithExpirationResponse.getTokenHex();
         const tokenExpirationBlock = tokenWithExpirationResponse.getTokenExpirationBlock();
         this._freeCallToken = { token: tokenHex, tokenExpirationBlock };
@@ -129,8 +124,8 @@ class FreeCallPaymentStrategy {
         if (typeof token !== 'string') {
             throw new Error('Token must be a string');
         }
-        return token.toLowerCase().startsWith('0x') 
-            ? token.substring(2) 
+        return token.toLowerCase().startsWith('0x')
+            ? token.substring(2)
             : token;
     }
 
@@ -147,15 +142,16 @@ class FreeCallPaymentStrategy {
             currentBlockNumber: toBNString(currentBlockNumber),
         };
     }
+
     /**
-     * helper. create the request for the freecall state service grpc
+     * helper. create the request for the free call state service grpc
      * @returns {FreeCallStateRequest}
      * @private
      */
     async _getFreeCallStateRequest(address) {
         logMessage('debug', 'FreeCallPaymentStrategy', `creating free call request with obtained before token for address=${address}`);
         const request = new this._freeCallStateMethodDescriptor.requestType();
-        
+
         const { signature, currentBlockNumber } = await this._getFreeCallStateRequestProperties(address);
         const tokenBytes = hexStringToBytes(this._freeCallToken.token);
         request.setAddress(address);
@@ -165,17 +161,18 @@ class FreeCallPaymentStrategy {
 
         return request;
     }
+
     /**
-     * helper. get avaliable number of free calls for user
+     * helper. get available number of free calls for user
      * @param {*} address user wallet address (metamask, for example)
-     * @returns {Promise<number>} number of avaliable free calls
+     * @returns {Promise<number>} number of available free calls
      */
-    async _getFreeCallsAvaliableWithFreeCallsToken(address) {
+    async _getFreeCallsAvailableWithFreeCallsToken(address) {
         const request = await this._getFreeCallStateRequest(address);
         const response = await wrapRpcToPromise(this._freeCallStateServiceClient, "getFreeCallsAvailable", request);
-        const avaliableFreeCalls = response.getFreeCallsAvailable();
-        return avaliableFreeCalls;
+        return response.getFreeCallsAvailable();
     }
+
     /* /getFreeCallsAvailable helpers */
 
     /**
@@ -186,12 +183,13 @@ class FreeCallPaymentStrategy {
     async getFreeCallsAvailable() {
         const { address } = await this._getNecessaryFieldsForGetFreeCallsAvailable();
         await this._updateFreeCallsToken(address);
-        const avaliableFreeCalls = await this._getFreeCallsAvaliableWithFreeCallsToken(address);
-        return avaliableFreeCalls;
+        const availableFreeCalls = await this._getFreeCallsAvailableWithFreeCallsToken(address);
+        logMessage('debug', 'FreeCallPaymentStrategy', `Available free calls=${availableFreeCalls}`);
+        return availableFreeCalls;
     }
 
     /**
-     * Check if there is any freecalls left for x service.
+     * Check if there is any free calls left for x service.
      * @returns {Promise<boolean>}
      */
     async isFreeCallAvailable() {
