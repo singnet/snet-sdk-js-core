@@ -147,7 +147,7 @@ class Account {
             const txObject = await this._baseTransactionObject(operation, to);
             return this._identity.sendTransaction(txObject);
         } catch (error) {
-            throw new Error('send transaction error: ', error);
+            throw new Error(`send transaction error: ${error}`);
         }
     }
 
