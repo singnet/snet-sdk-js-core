@@ -153,22 +153,24 @@ class FreeCallPaymentStrategy {
         logMessage('debug', 'FreeCallPaymentStrategy', `creating free call request with obtained before token for args=${args}`);
         const request = new this._freeCallStateMethodDescriptor.requestType();
         let signature;
-        const currentBlockNumber = Number(await this._account.getCurrentBlockNumber());
+        let currentBlockNumber = Number(await this._account.getCurrentBlockNumber());
         let token;
         let userId;
+        let address;
 
         if (typeof args === 'string' ) {
-            const address = args; 
+            address = args; 
             
             ({ signature } = await this._getFreeCallStateRequestProperties(address));
             token = this._freeCallToken.token;
-            request.setAddress(address);
         } else {
-            ({ signature, userId, token } = args);
+            ({ signature, userId, token, address, currentBlockNumber } = args);
+            signature = hexStringToBytes(signature)
             request.setUserId(userId);
         }
         
         request.setFreeCallToken(hexStringToBytes(token));
+        request.setAddress(address);
         request.setSignature(signature);
         request.setCurrentBlock(currentBlockNumber);
 

@@ -73,6 +73,7 @@ export class FreecallMetadataGenerator extends MetadataGenerator {
             }, signatureBytes: {
                 header: 'snet-payment-channel-signature-bin', value: metadata?.signatureBytes?.toString('base64'),
             },
+            userId: { header: "snet-free-call-user-id", value: metadata?.userId,}
         };
     }
 }
