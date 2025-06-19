@@ -76,7 +76,7 @@ export default class IPFSMetadataProvider {
                 await this._registryContract.methods.getServiceRegistrationById(orgIdBytes, serviceIdBytes).call();
             return this._fetchMetadataFromIpfs(serviceMetadataURI);
         } catch (error) {
-            throw new Error('fetching service metadata error: ', error);
+            throw new Error(`fetching service metadata error: ${error.message}`, error);
         }
     }
 

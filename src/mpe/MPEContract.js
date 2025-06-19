@@ -115,7 +115,7 @@ class MPEContract {
                 ...openChannelFnArgs
             );
         } catch (error) {
-            throw new Error('opening neq payment channel error: ', error);
+            throw new Error(`opening neq payment channel error: ${error.message}`, error);
         }
     }
 
@@ -162,7 +162,7 @@ class MPEContract {
             );
         } catch (error) {
             throw new Error(
-                'depositing and opening new payment channel error: ',
+                `depositing and opening new payment channel error: ${error.message}`,
                 error
             );
         }
@@ -194,7 +194,7 @@ class MPEContract {
                 amount
             );
         } catch (error) {
-            throw new Error('adding funds error: ', error);
+            throw new Error(`adding funds error: ${error.message}`, error);
         }
     }
 
@@ -251,7 +251,7 @@ class MPEContract {
             );
         } catch (error) {
             throw new Error(
-                'extending and funding payment channel error: ',
+                `extending and funding payment channel error: ${error.message}`,
                 error
             );
         }
@@ -346,7 +346,7 @@ class MPEContract {
             });
         } catch (error) {
             throw new Error(
-                'getting past open payment channels error: ',
+                `getting past open payment channels error: ${error.message}`,
                 error
             );
         }
@@ -362,7 +362,7 @@ class MPEContract {
                 await account.depositToEscrowAccount(amountInCogsBN.minus(currentEscrowBalance));
             }
         } catch (error) {
-            throw new Error('funding escrow account error: ', error);
+            throw new Error(`funding escrow account error: ${error.message}`, error);
         }
     }
 
@@ -374,7 +374,7 @@ class MPEContract {
             );
             return blockNumber;
         } catch (error) {
-            throw new Error('deployment block number error: ', error);
+            throw new Error(`deployment block number error: ${error.message}`, error);
         }
     }
 }
