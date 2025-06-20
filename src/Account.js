@@ -31,7 +31,7 @@ class Account {
             const address = await this.getAddress();
             return this.tokenContract.methods.balanceOf(address).call();
         } catch (error) {
-            throw new Error('get balance error ', error, error.message);
+            throw new Error(`get balance error ${error.message}`, error);
         }
     }
 
@@ -44,7 +44,7 @@ class Account {
             const address = await this.getAddress();
             return this._mpeContract.balance(address);
         } catch (error) {
-            throw new Error('get escrow balance error ', error);
+            throw new Error(`get escrow balance error ${error.message}`, error);
         }
     }
 
@@ -63,7 +63,7 @@ class Account {
 
             return this._mpeContract.deposit(this, amountInCogs);
         } catch (error) {
-            throw new Error('deposit to escrow error ', error);
+            throw new Error(`deposit to escrow error ${error.message}`, error);
         }
     }
 
@@ -94,7 +94,7 @@ class Account {
             const address = await this.getAddress();
             return this.tokenContract.methods.allowance(address, this._mpeContract.address).call();
         } catch (error) {
-            throw new Error('allowance error ', error);
+            throw new Error(`allowance error ${error.message}`, error);
         }
     }
 
@@ -130,7 +130,7 @@ class Account {
             const byteSig = Buffer.from(stripped, 'hex');
             return Buffer.from(byteSig);
         } catch (error) {
-            throw new Error('sign data error: ', error);
+            throw new Error(`sign data error: ${error.message}`, error);
         }
     }
 
@@ -188,7 +188,7 @@ class Account {
                 chainId,
             };
         } catch (error) {
-            throw new Error('generate base transaction object error: ', error);
+            throw new Error(`generate base transaction object error: ${error.message}`, error);
         }
     }
 
@@ -222,7 +222,7 @@ class Account {
             const address = await this.getAddress();
             return this._web3.eth.getTransactionCount(address);
         } catch (error) {
-            throw new Error('counting transaction error: ', error);
+            throw new Error(`counting transaction error: ${error.message}`, error);
         }
     }
 
@@ -230,7 +230,7 @@ class Account {
         try {
             return await this._web3.eth.net.getId();
         } catch (error) {
-            throw new Error('get chain id error: ', error);
+            throw new Error(`get chain id error: ${error.message}`, error);
         }
     }
 
@@ -242,7 +242,7 @@ class Account {
         try {
             return await this._web3.eth.getBlockNumber();
         } catch (error) {
-            throw new Error('getting current block number error: ', error);
+            throw new Error(`getting current block number error: ${error.message}`, error);
         }
     }
 }

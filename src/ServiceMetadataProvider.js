@@ -138,7 +138,7 @@ class ServiceMetadataProvider {
             };
             return metadataGenerator.generateMetadata(metadataValues);
         } catch (error) {
-            throw new Error('fetching payment service metadata error: ', error);
+            throw new Error(`fetching payment service metadata error: ${error.message}`, error);
         }
     }
 

@@ -36,7 +36,7 @@ class PaymentChannelProvider {
             return { currentBlockNumber, signatureBytes };
         } catch (error) {
             throw new Error(
-                'channel state request properties generating error: ',
+                `channel state request properties generating error: ${error.message}`,
                 error
             );
         }
@@ -68,7 +68,7 @@ class PaymentChannelProvider {
             logMessage('info', 'PaymentChannelProvider', `New PaymentChannel[id: ${newPaymentChannel.channelId}] opened`)
             return newPaymentChannel;
         } catch (error) {
-            throw new Error('getting newly opened channel error: ', error);
+            throw new Error(`getting newly opened channel error: ${error.message}`, error);
         }
     }
 
@@ -158,7 +158,7 @@ class PaymentChannelProvider {
             );
             return this._getNewlyOpenedChannel();
         } catch (error) {
-            throw new Error('opening channel states error: ', error);
+            throw new Error(`opening channel states error: ${error.message}`, error);
         }
     }
 
@@ -178,7 +178,7 @@ class PaymentChannelProvider {
             return this._getNewlyOpenedChannel();
         } catch (error) {
             throw new Error(
-                'depositing and opening channel states error: ',
+                `depositing and opening channel states error: ${error.message}`,
                 error
             );
         }
