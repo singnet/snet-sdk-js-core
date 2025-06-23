@@ -1,4 +1,4 @@
-# snet-sdk-core
+# snet-sdk-js-core
 SingularityNET SDK core for JavaScript
   
 ## Getting Started
@@ -84,9 +84,9 @@ Example structure:
 
 ```
 /workspace/
-  ├── snet-sdk-core/
-  ├── snet-sdk-nodejs/
-  └── snet-sdk-web/
+  ├── snet-sdk-js-core/
+  ├── snet-sdk-js-nodejs/
+  └── snet-sdk-js-web/
 ```
 
 2. Build the Core Package
@@ -94,19 +94,19 @@ Example structure:
 Navigate to the core package and run:
 
 ```
-cd snet-sdk-core
+cd snet-sdk-js-core
 npm run build
 ```
-This generates the compiled output in `snet-sdk-core/dist.`
+This generates the compiled output in `snet-sdk-js-core/dist.`
 
 3. Link the Local Core Package
 
-In the `nodeJS` and `web` packages, replace the `snet-sdk-core` dependency with a local file reference.
+In the `nodeJS` and `web` packages, replace the `snet-sdk-js-core` dependency with a local file reference.
 
 Update their respective `package.json` files to:
 
 ```
-"snet-sdk-core": "file:../snet-sdk-core/dist"
+"snet-sdk-core": "file:../snet-sdk-js-core/dist"
 ```
 
 Then, reinstall dependencies in each package:
